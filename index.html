@@ -134,8 +134,7 @@ footer { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; font: 14px/
 <div class="prose"><h1 id="top">Full-shot anime generation: which video models move convincingly, and a one-second repair</h1>
 <p><em>Anime can now be generated a whole shot at a time, scene and motion together, from a single first frame. We compared seven video routes on six shots to find the ones that move convincingly with little work from an artist on the in-betweens, then regenerated one second of a failed take with our seq adapter.</em></p>
 <p><strong>Alvdansen Labs</strong> · Minta Carlson, Timothy Bielec · October 2026</p>
-<p>This study is about generating anime one full shot at a time. Each shot begins with a single generated frame, not layers
-or line art. A video model renders the whole scene from it: character, background and motion together. What we set out to find is
+<p>This study is about generating anime one full shot at a time. Each shot begins from one generated frame, with no layers and no line art. A video model renders the whole scene from it: character, background and motion together. What we set out to find is
 which models move convincingly in this style with little direct work from an artist on
 the in-betweens, the drawings that carry a movement from one pose to the next. Anime usually holds each of those drawings for two
 frames, a rhythm called twos, which gives twelve drawings to every second of screen. Keeping that cadence, and keeping the motion
@@ -153,10 +152,8 @@ seven routes are:</p>
 <li>MiniMax H3, run from its open weights</li>
 <li>Two adapters we trained on top of those weights, the seq adapter and the hero adapter</li>
 </ul>
-<p>Each route animated each first frame twice, into a 5-second shot. Our Creative
-Lead, Minta Carlson, graded every take by eye, and we measured every take frame by frame. Then we set out to repair one take that
-went wrong. Its knock hits the peephole lens instead of the door, so we regenerated that second with our seq adapter as a tween to cut
-back into the take.</p></div>
+<p>Each route animated each first frame twice, into a 5-second shot. We graded every take by eye and measured every take frame by frame. Then we set out to repair one take that
+went wrong. Its knock was meant for the door and hits the peephole lens. We regenerated that second with our seq adapter as a tween to cut back into the take.</p></div>
 <div class="prose"><h2 id="summary">What we found</h2>
 <p>Five findings came out of the study, the first four from the comparison and the fifth from the repair:</p>
 <ol>
@@ -164,7 +161,7 @@ back into the take.</p></div>
    motion: timing, contact, and movement the shot gives no reason for.</li>
 <li><strong><a href="#signatures">Each route fails differently, and the kind of failure decides the fix.</a></strong> The four routes we found smoothest do not
    line up from best to worst. Each tends toward a different kind of failure, and each kind has a different repair.</li>
-<li><strong><a href="#range">Two attempts that agree may show the model's bias, not its control.</a></strong> Wan 3.0 varied least between attempts and
+<li><strong><a href="#range">Two attempts that agree may show the model's bias. Agreement alone does not show control.</a></strong> Wan 3.0 varied least between attempts and
    tended to repeat its flaws. A second attempt buys little there, and a frame-level fix buys a lot.</li>
 <li><strong><a href="#measures">The measurements describe rhythm; the eye judges the take.</a></strong> Our cadence score did not predict which takes we would
    use. It is a good check on rhythm and on a cleanup, and it cannot judge whether a take works.</li>
@@ -172,7 +169,7 @@ back into the take.</p></div>
    and none of them will render a one-second span, including Seedance 2.5, which covered the most shots. The H3 open weights
    and our seq adapter can, and they repair in different ways.</li>
 </ol>
-<p>Our final four came from the grading: Wan 3.0, the H3 open weights, the H3 API and our seq adapter were the smoothest, though each had high and low points. Those four, in bold below, are the routes we publish <a href="#workflows">workflows</a> for. The seq adapter gets two of
+<p>Our final four came from the grading: Wan 3.0, the H3 open weights, the MiniMax H3 API and our seq adapter were the smoothest, though each had high and low points. Those four, in bold below, are the routes we publish <a href="#workflows">workflows</a> for. The seq adapter gets two of
 them: a long generation from a first frame, and a short tween, the in-betweens that carry one key to the next. The measures are
 defined under <a href="#method">How we measured</a>.</p>
 <div class="tw"><table>
@@ -197,7 +194,7 @@ defined under <a href="#method">How we measured</a>.</p>
 <td style="text-align: right;">0.55</td>
 <td style="text-align: right;">$0.65</td>
 <td style="text-align: right;">247 s</td>
-<td>yes</td>
+<td>Yes</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -227,7 +224,7 @@ defined under <a href="#method">How we measured</a>.</p>
 <td style="text-align: right;">0.60</td>
 <td style="text-align: right;">$0.50</td>
 <td style="text-align: right;">117 s</td>
-<td>yes</td>
+<td>Yes</td>
 </tr>
 <tr>
 <td><strong>H3 open weights</strong></td>
@@ -235,27 +232,27 @@ defined under <a href="#method">How we measured</a>.</p>
 <td style="text-align: right;">1 of 12</td>
 <td style="text-align: right;">4 of 6</td>
 <td style="text-align: right;">0.45</td>
-<td style="text-align: right;">none</td>
+<td style="text-align: right;">None</td>
 <td style="text-align: right;">380 s</td>
-<td>yes</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td><strong>seq adapter, 124f</strong></td>
+<td><strong>Seq adapter, 124 frames</strong></td>
 <td style="text-align: right;">5 of 12</td>
 <td style="text-align: right;">4 of 12</td>
 <td style="text-align: right;">4 of 6</td>
 <td style="text-align: right;">0.91</td>
-<td style="text-align: right;">none</td>
+<td style="text-align: right;">None</td>
 <td style="text-align: right;">1034 s</td>
-<td>yes</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td>hero adapter, 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">6 of 12</td>
 <td style="text-align: right;">4 of 12</td>
 <td style="text-align: right;">4 of 6</td>
 <td style="text-align: right;">0.64</td>
-<td style="text-align: right;">none</td>
+<td style="text-align: right;">None</td>
 <td style="text-align: right;">849 s</td>
 <td>–</td>
 </tr>
@@ -340,7 +337,7 @@ the detail). Each take was graded on one sheet:</p>
 <div class="prose"><h3 id="motion">1. The drawing holds before the motion does</h3>
 <p>Almost every take looked like hand-drawn anime. Of the takes we classed by look, nearly all read as classic 2D, the pencil and flat
 colour of the stills, and every take we would use as is was one of them. Yet fewer than half of the classic-2D takes were usable as is.
-Looking right was necessary and far from sufficient: the takes that failed did so between the frames, in how the drawings moved.
+Looking right was necessary and far from sufficient. The takes that failed did so between the frames, in how the drawings moved.
 <a href="https://alvdansen.github.io/animating-on-twos/">Animating on Twos</a> describes that gap for one model, and here it ran through every route we tried.</p>
 <p>Read together, the grading comments add up to a checklist for reviewing generated animation:</p>
 <ol>
@@ -350,25 +347,25 @@ Looking right was necessary and far from sufficient: the takes that failed did s
 <li><strong>Holding on twos.</strong> Anime is limited animation, with fewer drawings held for longer, and the holds are what make its motion feel
    intended. Without them everything moves at one speed and the motion loses its sense of intent, as in a FLUX 3 take of the peephole.</li>
 <li><strong>Line and look.</strong> Classic 2D, the hand-drawn look of the stills, against digital 2D and vector. Vector here means the eased or
-   constant-speed interpolation of motion graphics, in which shapes slide instead of being redrawn.
+   constant-speed interpolation of motion graphics, in which shapes slide and are not redrawn.
    One FLUX 3 take of the bus shelter came out as clunky vector, and
    one hero take was light in lineweight.</li>
 <li><strong>AI smears and ghosting.</strong> Frames that cross-dissolve two drawings into one. A drawn smear frame is different, because an animator
-   places it on purpose to sell speed. A smooth FLUX 3 take on the train has smeared frames that anyone who knows what to look for will spot.</li>
+   places it on purpose to sell speed. A smooth FLUX 3 take on the train has smeared frames that are easy to spot.</li>
 <li><strong>Morphing and drift.</strong> Shapes that swell, a character who stops being herself, line that boils from frame to frame, colour that
    flickers. On the roofs, one Seedance take lets the blanket grow far bigger.</li>
 <li><strong>Motion the shot gives no reason for.</strong> Wan 3.0 blew Emmy's hair about inside a closed <a href="#shot-01">train</a> carriage,
-   the kind of invented motion an animator would not draw.
-   On the <a href="#shot-04">roofs</a>, the H3 API had her go through the motions of folding without folding anything.</li>
+   invented motion that an animator would leave out.
+   On the <a href="#shot-04">roofs</a>, the MiniMax H3 API had her go through the motions of folding without folding anything.</li>
 <li><strong>Timing.</strong> Slow motion, rushed beats, endings that stop short of a settle. Seedance played the station platform in slow motion.</li>
 <li><strong>Contacts.</strong> Where a hand, a foot or a fist lands. The peephole knock was meant for the door.
-   The H3 API's first attempt punched the lens, while
+   The MiniMax H3 API's first attempt punched the lens, while
    the open weights placed the fist better (the
    <a href="#shot-05b">peephole</a> grids show both).</li>
 <li><strong>Range.</strong> How different two attempts are, which decides whether a second attempt is worth paying for. The section on
    <a href="#range">range</a> takes it up.</li>
 </ol>
-<p>Most of these happen across frames, not within one, which is how a take whose every frame passes can still fail. The problems flagged
+<p>Most of these happen across frames. A single frame does not show them. That is how a take whose every frame passes can still fail. The problems flagged
 on the sheet show the same thing from the other side, because they cover only part of what went wrong. Nearly half of the rejected
 takes carry no flag at all. They fail on things only the comments record:</p>
 <ul>
@@ -432,7 +429,7 @@ takes carry no flag at all. They fail on things only the comments record:</p>
 </tr>
 </tbody>
 </table></div>
-<p>Restraint counts as much as invention. On the slow pull-back over the roofs, most routes gave Emmy an action that does not read. The
+<p>A quiet take can grade as well as an inventive one. On the slow pull-back over the roofs, most routes gave Emmy an action that does not read. The
 hero adapter had her do very little, and we graded both of its attempts usable as is,
 because an action that makes no sense distracts more than a quiet one.</p>
 <p>The consequence for a studio is where review time goes. A single frame from almost any of these takes would pass inspection, so a take
@@ -457,26 +454,26 @@ tends toward. For a studio that matters more than a ranking, because the kind of
 <tr>
 <td><strong>Wan 3.0</strong></td>
 <td style="text-align: right;">3 · 8 · 1</td>
-<td>come close, and the same way twice</td>
-<td>regenerate the frames that are wrong</td>
+<td>Come close, and the same way twice</td>
+<td>Regenerate the frames that are wrong</td>
 </tr>
 <tr>
 <td><strong>H3 open weights</strong></td>
 <td style="text-align: right;">8 · 1 · 3</td>
-<td>hold a shot or lose it</td>
-<td>a take it holds rarely needs work; a take it loses needs another attempt or another route</td>
+<td>Hold a shot or lose it</td>
+<td>A take it holds rarely needs work; a take it loses needs another attempt or another route</td>
 </tr>
 <tr>
 <td><strong>MiniMax H3 API</strong></td>
 <td style="text-align: right;">5 · 3 · 4</td>
-<td>invent action and contact</td>
-<td>edit: retime frames onto twos, repair the invented beat</td>
+<td>Invent action and contact</td>
+<td>Edit: retime frames onto twos, repair the invented beat</td>
 </tr>
 <tr>
-<td><strong>seq adapter, 124f</strong></td>
+<td><strong>Seq adapter, 124 frames</strong></td>
 <td style="text-align: right;">5 · 4 · 3</td>
-<td>keep the motion and, when it fails, lose the drawing</td>
-<td>repair the drawing where the motion is worth keeping</td>
+<td>Keep the motion and, when it fails, lose the drawing</td>
+<td>Repair the drawing where the motion is worth keeping</td>
 </tr>
 </tbody>
 </table></div>
@@ -484,16 +481,15 @@ tends toward. For a studio that matters more than a ranking, because the kind of
 one of its takes and flagged no problem on any of them. Its weakness is that it comes close in the same way twice,
 which the section on <a href="#range">agreement between attempts</a> takes up. For most of its takes, the fix the grading named was to regenerate
 frames.</p>
-<p>The H3 open weights gave more takes usable as is than any other route and started closest to the still. Their failures are total, not
-partial: on the platform too many of their frames are bad, and
+<p>The H3 open weights gave more takes usable as is than any other route and started closest to the still. When they fail, the take is lost outright. On the platform too many of their frames are bad, and
 on the roofs one attempt goes wrong as she lifts the sheet.</p>
-<p>The H3 API tends to invent. It gave Emmy something to do on the roofs that she is not doing, on both attempts, and its first peephole
+<p>The MiniMax H3 API tends to invent. It gave Emmy something to do on the roofs that she is not doing, on both attempts, and its first peephole
 attempt drove the fist into the lens. On the platform its characters fell apart, with flickering and degradation.
 Its cadence also slips off twos in places, and there an edit that retimes the frames is a fine solution.</p>
 <p>FLUX 3 sits outside the four for a plain reason: it gave no take usable as is, and its takes slid into vector and smeared their
 in-betweens more often than any other route's. Seedance 2.5 sits outside for a subtler one, and it makes the clearest contrast
 with the seq adapter. Seedance gave a take usable as is on more shots than any other route and still missed our four, because most of
-its misses were timing misses. That is a pattern we saw in the strongest commercial models: high fidelity, with timing that can be very strange.</p>
+its misses were timing misses. We saw this pattern in the strongest commercial models. They pair high fidelity with timing that can be very strange.</p>
 <p>The seq adapter is the opposite case. It held twos most steadily of all seven routes and earned the highest in-between grades. It
 also added life the brief did not ask for: on the <a href="#shot-03b">bike</a>
 it was the first route to add trees to the scene, and they are a fine touch.
@@ -534,7 +530,7 @@ one's flaw. On the bike the two attempts are so alike that we read a sizeable bi
 </tr>
 <tr>
 <td>04 Roofs, pulling back</td>
-<td>Trouble with how she raises the sheet</td>
+<td>Trouble as she lifts the sheet</td>
 <td>The same trouble, as expected</td>
 </tr>
 <tr>
@@ -575,19 +571,19 @@ of the clip. It is lowest for Wan 3.0 and highest for the two adapters, whose at
 <td style="text-align: right;">7.6</td>
 </tr>
 <tr>
-<td>seq adapter, 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">10.6</td>
 </tr>
 <tr>
-<td>hero adapter, 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">10.6</td>
 </tr>
 </tbody>
 </table></div>
-<p>A wide route rewards the second attempt instead. On the <a href="#shot-03e">platform</a> the seq adapter gave both the best take of the shot and a
+<p>A wide route makes the second attempt worth paying for. On the <a href="#shot-03e">platform</a> the seq adapter gave both the best take of the shot and a
 rejected one. One seed told the most coherent story of any take there; the other
 was not usable. Commercial models can show range too. On the train,
-Seedance's two attempts showed real range between generations with no adapter involved,
+Seedance's two attempts showed real range with no adapter involved,
 although our measure scores that pair as the closest of the shot. We come back to that disagreement under <a href="#measures">measurement</a>.</p>
 <p>For a studio the consequence is practical. A second attempt from a narrow model returns the same answer with the same mistake, so the fix
 for Wan 3.0 is to regenerate the frames that are wrong and keep the rest of the take.</p></div>
@@ -664,9 +660,9 @@ pair as the closest of the shot. The per-shot tables in the Reference set the tw
 <li>rerun the weak opening frames of a Wan 3.0 take on the bike</li>
 <li>redo the end of a Wan 3.0 take on the platform</li>
 <li>drop one frame during Emmy's head turn from a hero take on the bus shelter</li>
-<li>slow a few frames of an H3 API take on the train to put it back on twos</li>
+<li>slow a few frames of a MiniMax H3 API take on the train to put it back on twos</li>
 </ul>
-<p>Those are repairs, not generations, and a repair asks different things of a model. It has to:</p>
+<p>Each of those is a repair. A repair asks different things of a model than a full generation does. It has to:</p>
 <ul>
 <li>render a short span</li>
 <li>start and end on frames that already exist in the take (its keys)</li>
@@ -674,7 +670,7 @@ pair as the closest of the shot. The per-shot tables in the Reference set the tw
 </ul>
 <h4 id="problem">The take</h4>
 <p>On the peephole shot, Emmy is meant to knock on the door. In the MiniMax H3 API's first attempt (seed 42) her fist goes
-straight into the lens and fills the view. The take is charming, but the punch on the peephole is plainly unintended, the kind of contact that marks lazy AI.
+straight into the lens and fills the view. The take is charming. The punch on the peephole is plainly unintended, the kind of contact error that marks careless AI generation.
 We chose this take for the test: keep it, regenerate the knock between two of its frames, and have the fist strike the door beside the
 peephole.</p>
 <h4 id="span">The span</h4>
@@ -712,11 +708,11 @@ timing between the two keys. The H3 open weights, and the seq adapter on top of 
 </tr>
 <tr>
 <td>H3 open weights and the seq adapter</td>
-<td>any 17n+5 frames at 24 fps (22 frames span 0.88 s key to key)</td>
+<td>Any 17n+5 frames at 24 fps (22 frames span 0.88 s key to key)</td>
 </tr>
 </tbody>
 </table></div>
-<p>This is worth knowing before a pipeline depends on a partner model: the commercial models are built to generate whole shots, and their length floors rule them out of small frame-to-frame edits. So we ran only the two routes that can render the span, and added a longer seq take to see a slower knock.</p>
+<p>This is worth knowing before a pipeline depends on a partner model. The commercial models are built to generate whole shots, and their length floors rule them out of small frame-to-frame edits. So we ran only the two routes that can render the span, and added a longer seq take to see a slower knock.</p>
 <h4 id="ran">What ran</h4>
 <p>We made six takes, all given the span's first and last frames, with seeds 42 and 1042 for each of these:</p>
 <ul>
@@ -730,8 +726,7 @@ timing between the two keys. The H3 open weights, and the seq adapter on top of 
 <ul>
 <li>The H3 open weights ran on MiniMax's first-and-last-frame graph, which treats the two frames as fixed endpoints and fills the frames
   between them.</li>
-<li>The seq adapter ran on the reference-to-video graph, which treats them as references, drawings to work from instead of frames to
-  reproduce. An alignment line in the prompt places them in time (“Picture 2 aligns with the 0.88-second mark” at
+<li>The seq adapter ran on the reference-to-video graph, which treats them as references, drawings the model works from and may redraw. An alignment line in the prompt places them in time (“Picture 2 aligns with the 0.88-second mark” at
   22 frames, the tween's key-to-key time).</li>
 </ul>
 <p>The published tween workflow uses the second graph.</p></div>
@@ -758,7 +753,7 @@ the take. Until then, the grid's ¼× speed setting lets anyone judge the knock 
 </thead>
 <tbody>
 <tr>
-<td>Source take (H3 API)</td>
+<td>Source take (MiniMax H3 API)</td>
 <td style="text-align: right;">–</td>
 <td style="text-align: right;">25</td>
 <td style="text-align: right;">1.00</td>
@@ -770,7 +765,7 @@ the take. Until then, the grid's ¼× speed setting lets anyone judge the knock 
 <td style="text-align: right;">–</td>
 </tr>
 <tr>
-<td>H3 open weights, 22f</td>
+<td>H3 open weights, 22 frames</td>
 <td style="text-align: right;">42</td>
 <td style="text-align: right;">22</td>
 <td style="text-align: right;">0.88</td>
@@ -782,7 +777,7 @@ the take. Until then, the grid's ¼× speed setting lets anyone judge the knock 
 <td style="text-align: right;">65 s</td>
 </tr>
 <tr>
-<td>H3 open weights, 22f</td>
+<td>H3 open weights, 22 frames</td>
 <td style="text-align: right;">1042</td>
 <td style="text-align: right;">22</td>
 <td style="text-align: right;">0.88</td>
@@ -794,7 +789,7 @@ the take. Until then, the grid's ¼× speed setting lets anyone judge the knock 
 <td style="text-align: right;">59 s</td>
 </tr>
 <tr>
-<td>seq adapter, 22f</td>
+<td>Seq adapter, 22 frames</td>
 <td style="text-align: right;">42</td>
 <td style="text-align: right;">22</td>
 <td style="text-align: right;">0.88</td>
@@ -806,7 +801,7 @@ the take. Until then, the grid's ¼× speed setting lets anyone judge the knock 
 <td style="text-align: right;">409 s</td>
 </tr>
 <tr>
-<td>seq adapter, 22f</td>
+<td>Seq adapter, 22 frames</td>
 <td style="text-align: right;">1042</td>
 <td style="text-align: right;">22</td>
 <td style="text-align: right;">0.88</td>
@@ -818,7 +813,7 @@ the take. Until then, the grid's ¼× speed setting lets anyone judge the knock 
 <td style="text-align: right;">329 s</td>
 </tr>
 <tr>
-<td>seq adapter, 39f</td>
+<td>Seq adapter, 39 frames</td>
 <td style="text-align: right;">42</td>
 <td style="text-align: right;">39</td>
 <td style="text-align: right;">1.58</td>
@@ -830,7 +825,7 @@ the take. Until then, the grid's ¼× speed setting lets anyone judge the knock 
 <td style="text-align: right;">418 s</td>
 </tr>
 <tr>
-<td>seq adapter, 39f</td>
+<td>Seq adapter, 39 frames</td>
 <td style="text-align: right;">1042</td>
 <td style="text-align: right;">39</td>
 <td style="text-align: right;">1.58</td>
@@ -851,7 +846,7 @@ open-weights takes. Which matters more depends on the cut. A repair that must ma
 a repair whose job is the rhythm wants the redraw.</p></div>
 <div class="prose"><h3 id="twos-clean">The twos-clean trick</h3>
 <p>A model that animates on twos rarely draws a true hold. The second frame of a held pair is almost the first one, with a line shifted here
-and the colour moved a little there, so the holds shimmer when the take plays. The cure is simple: where a take is properly on twos, keep
+and the colour moved a little there, so the holds shimmer when the take plays. The cure is simple. Where a take is properly on twos, keep
 the more coherent frame of each held pair and show it on both frames. It is the cheapest repair in this study, because it regenerates
 nothing and works on the frames a take already has. It takes five steps:</p>
 <ol>
@@ -879,7 +874,7 @@ nothing and works on the frames a take already has. It takes five steps:</p>
 </thead>
 <tbody>
 <tr>
-<td>H3 open weights, 22f</td>
+<td>H3 open weights, 22 frames</td>
 <td style="text-align: right;">42</td>
 <td style="text-align: right;">0.90</td>
 <td style="text-align: right;">22 of 22</td>
@@ -888,7 +883,7 @@ nothing and works on the frames a take already has. It takes five steps:</p>
 <td style="text-align: right;">6.3% → 0.3%</td>
 </tr>
 <tr>
-<td>seq adapter, 22f</td>
+<td>Seq adapter, 22 frames</td>
 <td style="text-align: right;">42</td>
 <td style="text-align: right;">1.00</td>
 <td style="text-align: right;">22 of 22</td>
@@ -897,7 +892,7 @@ nothing and works on the frames a take already has. It takes five steps:</p>
 <td style="text-align: right;">14.1% → 0.4%</td>
 </tr>
 <tr>
-<td>seq adapter, 22f</td>
+<td>Seq adapter, 22 frames</td>
 <td style="text-align: right;">1042</td>
 <td style="text-align: right;">1.00</td>
 <td style="text-align: right;">22 of 22</td>
@@ -906,7 +901,7 @@ nothing and works on the frames a take already has. It takes five steps:</p>
 <td style="text-align: right;">9.8% → 0.5%</td>
 </tr>
 <tr>
-<td>seq adapter, 39f</td>
+<td>Seq adapter, 39 frames</td>
 <td style="text-align: right;">42</td>
 <td style="text-align: right;">0.86</td>
 <td style="text-align: right;">34 of 39</td>
@@ -915,19 +910,19 @@ nothing and works on the frames a take already has. It takes five steps:</p>
 <td style="text-align: right;">7.6% → 0.4%</td>
 </tr>
 <tr>
-<td>H3 open weights, 22f</td>
+<td>H3 open weights, 22 frames</td>
 <td style="text-align: right;">1042</td>
 <td style="text-align: right;">0.55</td>
-<td style="text-align: right;">not cleaned</td>
+<td style="text-align: right;">Not cleaned</td>
 <td style="text-align: right;">–</td>
 <td style="text-align: right;">–</td>
 <td style="text-align: right;">–</td>
 </tr>
 <tr>
-<td>seq adapter, 39f</td>
+<td>Seq adapter, 39 frames</td>
 <td style="text-align: right;">1042</td>
 <td style="text-align: right;">0.68</td>
-<td style="text-align: right;">not cleaned</td>
+<td style="text-align: right;">Not cleaned</td>
 <td style="text-align: right;">–</td>
 <td style="text-align: right;">–</td>
 <td style="text-align: right;">–</td>
@@ -942,10 +937,10 @@ threshold were left as generated.</p>
 <p>The video below sets the take whose holds moved most beside its cleaned version, as generated on the left and cleaned on the right, with
 frame numbers in the corners. The figure after it shows the four pairs from that take that moved most inside the
 hold, with the change amplified 8 times.</p></div>
-<figure class="vid"><video id="v2" controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-22f_seed42.jpg" aria-label="Twos-clean before and after, side by side"><source src="media/partb/twos-clean_seq-adapter-22f_seed42.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v2" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v2" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v2" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>Before and after: seq adapter, 22f, seed 42, best seen at ¼× speed.</figcaption></figure>
-<figure class="img"><img src="media/partb/twos-clean_held-pairs_seq-adapter-22f_seed42.jpg" alt="Held pairs before cleaning, with the difference between the two frames" loading="lazy" decoding="async"><figcaption>Held pairs from seq adapter, 22f, seed 42. The outlined frame is the keeper; the grey image shows what changes between the two frames of the hold, amplified 8 times.</figcaption></figure>
+<figure class="vid"><video id="v2" controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-22f_seed42.jpg" aria-label="Twos-clean before and after, side by side"><source src="media/partb/twos-clean_seq-adapter-22f_seed42.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v2" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v2" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v2" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>Before and after: seq adapter, 22 frames, seed 42, best seen at ¼× speed.</figcaption></figure>
+<figure class="img"><img src="media/partb/twos-clean_held-pairs_seq-adapter-22f_seed42.jpg" alt="Held pairs before cleaning, with the difference between the two frames" loading="lazy" decoding="async"><figcaption>Held pairs from seq adapter, 22 frames, seed 42. The outlined frame is the keeper; the grey image shows what changes between the two frames of the hold, amplified 8 times.</figcaption></figure>
 <div class="prose"><p>The other cleaned takes:</p></div>
-<div class="trio"><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_h3-open-weights-22f_seed42.jpg" aria-label="Twos-clean before and after: H3 open weights, 22f, seed 42"><source src="media/partb/twos-clean_h3-open-weights-22f_seed42.mp4" type="video/mp4"></video><figcaption>H3 open weights, 22f, seed 42</figcaption></figure><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-22f_seed1042.jpg" aria-label="Twos-clean before and after: seq adapter, 22f, seed 1042"><source src="media/partb/twos-clean_seq-adapter-22f_seed1042.mp4" type="video/mp4"></video><figcaption>seq adapter, 22f, seed 1042</figcaption></figure><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-39f_seed42.jpg" aria-label="Twos-clean before and after: seq adapter, 39f, seed 42"><source src="media/partb/twos-clean_seq-adapter-39f_seed42.mp4" type="video/mp4"></video><figcaption>seq adapter, 39f, seed 42</figcaption></figure></div>
+<div class="trio"><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_h3-open-weights-22f_seed42.jpg" aria-label="Twos-clean before and after: H3 open weights, 22 frames, seed 42"><source src="media/partb/twos-clean_h3-open-weights-22f_seed42.mp4" type="video/mp4"></video><figcaption>H3 open weights, 22 frames, seed 42</figcaption></figure><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-22f_seed1042.jpg" aria-label="Twos-clean before and after: seq adapter, 22 frames, seed 1042"><source src="media/partb/twos-clean_seq-adapter-22f_seed1042.mp4" type="video/mp4"></video><figcaption>Seq adapter, 22 frames, seed 1042</figcaption></figure><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-39f_seed42.jpg" aria-label="Twos-clean before and after: seq adapter, 39 frames, seed 42"><source src="media/partb/twos-clean_seq-adapter-39f_seed42.mp4" type="video/mp4"></video><figcaption>Seq adapter, 39 frames, seed 42</figcaption></figure></div>
 <div class="prose"><h3 id="take-away">In practice</h3>
 <ul>
 <li><strong>Short spans need open weights.</strong> A repair shorter than the partner nodes' floor goes to the H3 open weights or the seq adapter, which
@@ -980,11 +975,11 @@ than any other route's. On takes usable as is, they sit between the two:</p>
 <td style="text-align: right;">7 of 12</td>
 </tr>
 <tr>
-<td>hero adapter, 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">6 of 12</td>
 </tr>
 <tr>
-<td>seq adapter, 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">5 of 12</td>
 </tr>
 <tr>
@@ -997,12 +992,12 @@ than any other route's. On takes usable as is, they sit between the two:</p>
 <ul>
 <li>fidelity and style matching to its house style</li>
 <li>lower generation cost, since a run on open weights pays for GPU time and no partner fee per clip</li>
-<li>flexibility, with real range between generations</li>
+<li>flexibility, with real range between attempts</li>
 </ul>
 <p>Each of the final four points to a different follow-up:</p>
 <ul>
 <li>Wan 3.0 comes close the same way twice, so it pairs better with frame repair than with a second roll.</li>
-<li>The H3 API invents action and contact, so a studio using it should plan to edit.</li>
+<li>The MiniMax H3 API invents action and contact, so a studio using it should plan to edit.</li>
 <li>The H3 open weights hold a shot or lose it, so a lost take calls for another attempt or another route.</li>
 <li>The seq adapter keeps the rhythm and leaves the drawing as the thing to repair when it fails.</li>
 </ul>
@@ -1014,6 +1009,7 @@ still where the cost of this work sits, and these routes help with that labor un
 seq adapter gets two; its LoRA can be switched off to run the H3 open weights. Each is built by the same code that made
 the takes in this study, with the study's prompt left in as an editable example. <code>FIRST_FRAME.png</code> (and <code>LAST_FRAME.png</code> for the tween)
 is where your key drawings go.</p>
+<p>The Wan 3.0 and MiniMax H3 API workflows use Floyo partner nodes (<code>AlibabaWan30ImageToVideo_floyo</code>, <code>MiniMaxH3FirstLastFrameToVideo_floyo</code>) and run on Floyo. The two seq adapter workflows use ComfyUI's MiniMax H3 nodes.</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -1028,28 +1024,28 @@ is where your key drawings go.</p>
 <tr>
 <td>Wan 3.0, first frame</td>
 <td><a href="workflows/anime_i2v_wan30_first_frame.json"><code>anime_i2v_wan30_first_frame.json</code></a></td>
-<td>first frame</td>
+<td>First frame</td>
 <td>5 s at the model's native rate (30 fps)</td>
 <td>[Floyo workflow link: to come]</td>
 </tr>
 <tr>
 <td>MiniMax H3 API, first frame</td>
 <td><a href="workflows/anime_i2v_minimax_h3_api_first_frame.json"><code>anime_i2v_minimax_h3_api_first_frame.json</code></a></td>
-<td>first frame</td>
+<td>First frame</td>
 <td>5 s at the model's native rate (24 fps)</td>
 <td>[Floyo workflow link: to come]</td>
 </tr>
 <tr>
-<td>seq adapter, long first-frame generation</td>
+<td>Seq adapter, long first-frame generation</td>
 <td><a href="workflows/anime_seq_adapter_first_frame_124f.json"><code>anime_seq_adapter_first_frame_124f.json</code></a></td>
-<td>first frame (one reference)</td>
+<td>First frame (one reference)</td>
 <td>124 frames at 24 fps</td>
 <td>[Floyo workflow link: to come]</td>
 </tr>
 <tr>
-<td>seq adapter, tween between two keys</td>
+<td>Seq adapter, tween between two keys</td>
 <td><a href="workflows/anime_seq_adapter_tween_first_last_22f.json"><code>anime_seq_adapter_tween_first_last_22f.json</code></a></td>
-<td>first and last frame (two references)</td>
+<td>First and last frame (two references)</td>
 <td>22 frames at 24 fps</td>
 <td>[Floyo workflow link: to come]</td>
 </tr>
@@ -1060,7 +1056,7 @@ is where your key drawings go.</p>
 <li>Request access at <a href="https://huggingface.co/alvdansen/h3-keyframe-animation">alvdansen/h3-keyframe-animation</a> on Hugging Face.</li>
 <li>Take <code>h3_seq_step12000</code> from the repository's <code>adapters</code> folder. It is already converted for H3.</li>
 <li>Put it in your ComfyUI <code>models/loras</code> folder and select it in that node.</li>
-<li>The model card gives the license, the inference settings and the conditioning contract. The adapters run on the full H3 model, not Turbo, under MiniMax's H3 license.</li>
+<li>The model card gives the license, the inference settings and the conditioning contract. The adapters run on the full H3 model under MiniMax's H3 license. They do not run on H3 Turbo.</li>
 </ol>
 <p>Notes on the workflows:</p>
 <ul>
@@ -1069,7 +1065,7 @@ is where your key drawings go.</p>
 <li><strong>H3 open weights:</strong> open either seq workflow and set the LoRA strength to 0, or bypass the LoRA node. That runs the open weights on
   the reference-to-video path. The H3 open-weights takes in this study came from MiniMax's image-to-video graph, so results with the
   LoRA off can differ from them.</li>
-<li><strong>Frame rate:</strong> on the partner graphs the video is saved at the model's native rate, read from the model's output. On the open-weight
+<li><strong>Frame rate:</strong> on the partner graphs the video is saved at the model's native rate, read from the model's output. On the open-weights
   graphs it is saved at 24 fps, H3's native rate, which the length formula (17n+5 frames) also uses. A fixed rate that does
   not match the model plays the clip too fast or too slow.</li>
 <li><strong>Prompts:</strong> the first-frame examples are the bus-shelter prompts from Part A, and the tween example is the peephole knock from Part B.
@@ -1079,8 +1075,7 @@ is where your key drawings go.</p>
 <div class="prose"><h2 id="reference">Reference</h2>
 <h3 id="models">The routes, one by one</h3>
 <p>Each route's card gives its tally over its 12 takes (six shots, two attempts) and its medians over the
-same takes. The study's 84 graded takes cost $46.32 in partner fees in all. The open-weight routes pay no partner fee and run
-on Floyo GPU time instead, and each card gives its route's fee and run time.</p></div>
+same takes. The study's 84 graded takes cost $46.32 in partner fees in all. The open-weights routes pay no partner fee and run on Floyo GPU time. Each card gives its route's fee and run time.</p></div>
 <div class="prose"><h4 id="route-h3-api">MiniMax H3 API</h4></div>
 <dl class="stats"><div><dt>Usable as is</dt><dd>5 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>4 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>3 / 4</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 5 · partly 6 · no 1</dd></div><div><dt>Twos score, median</dt><dd>0.55</dd></div><div><dt>Drawings per second, median</dt><dd>15.8</dd></div><div><dt>First-key gap, median</dt><dd>7.7</dd></div><div><dt>Seed spread, median</dt><dd>7.6</dd></div><div><dt>Partner fee per clip</dt><dd>$0.65</dd></div><div><dt>Floyo run time, median</dt><dd>247 s</dd></div><div><dt>Output</dt><dd>124 frames at 24 fps, 2544x1456</dd></div></dl>
 <div class="prose"><p><strong>Out of the box.</strong> A single partner node and the still. MiniMax rewrites the prompt before the model sees it (its prompt expansion), so
@@ -1096,7 +1091,7 @@ a complete prompt, with every beat timed, matters more than a clever one. It ret
 <li>The platform, where it fell apart.</li>
 <li>The roofs, where it invented an action on both attempts.</li>
 <li>The first peephole attempt, which punched the lens. It is the take Part B repairs.</li>
-<li>Where its cadence slips off twos we would retime it instead of rejecting it,
+<li>Where its cadence slips off twos we would keep the take and retime it,
   slowing certain frames to put it back on twos.</li>
 </ul></div>
 <div class="prose"><h4 id="route-seedance">Seedance 2.5</h4></div>
@@ -1165,12 +1160,11 @@ other route.</p>
 <li>The roofs, where one attempt goes wrong as she lifts the sheet.</li>
 <li>Even a good take on the bus shelter felt a little immature in the quality of its animation.</li>
 </ul></div>
-<div class="prose"><h4 id="route-seq-adapter">seq adapter, 124f</h4></div>
+<div class="prose"><h4 id="route-seq-adapter">Seq adapter, 124 frames</h4></div>
 <dl class="stats"><div><dt>Usable as is</dt><dd>5 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>4 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>4 / 3</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 9 · partly 3 · no 0</dd></div><div><dt>Twos score, median</dt><dd>0.91</dd></div><div><dt>Drawings per second, median</dt><dd>12.4</dd></div><div><dt>First-key gap, median</dt><dd>19.9</dd></div><div><dt>Seed spread, median</dt><dd>10.6</dd></div><div><dt>Partner fee per clip</dt><dd>none (Floyo GPU time)</dd></div><div><dt>Floyo run time, median</dt><dd>1034 s</dd></div><div><dt>Output</dt><dd>124 frames at 24 fps, 1344x768</dd></div></dl>
 <div class="prose"><p><strong>Out of the box.</strong> Our seq adapter on the H3 open weights, run here as a long generation from a first frame: 124 frames
 from one reference, against the model card's 22 frames from two. It is the slowest
-route on Floyo GPUs and pays no partner fee. It redraws its
-reference instead of copying it, so its first frame sits further from the still than any image-to-video route's.</p>
+route on Floyo GPUs and pays no partner fee. It redraws its reference. Its first frame sits further from the still than any image-to-video route's.</p>
 <p><strong>High points</strong></p>
 <ul>
 <li>The steadiest twos of the study and the highest average in-between grade.</li>
@@ -1184,16 +1178,15 @@ reference instead of copying it, so its first frame sits further from the still 
 <li>The train, where it shares the hair flicker we found on Wan 3.0 and the hero adapter.</li>
 <li>The second peephole attempt, where she points at the peephole.</li>
 </ul></div>
-<div class="prose"><h4 id="route-hero-adapter">hero adapter, 124f</h4></div>
+<div class="prose"><h4 id="route-hero-adapter">Hero adapter, 124 frames</h4></div>
 <dl class="stats"><div><dt>Usable as is</dt><dd>6 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>4 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>4 / 2</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 8 · partly 3 · no 1</dd></div><div><dt>Twos score, median</dt><dd>0.64</dd></div><div><dt>Drawings per second, median</dt><dd>15.4</dd></div><div><dt>First-key gap, median</dt><dd>22.8</dd></div><div><dt>Seed spread, median</dt><dd>10.6</dd></div><div><dt>Partner fee per clip</dt><dd>none (Floyo GPU time)</dd></div><div><dt>Floyo run time, median</dt><dd>849 s</dd></div><div><dt>Output</dt><dd>124 frames at 24 fps, 1344x768</dd></div></dl>
 <div class="prose"><p><strong>Out of the box.</strong> Our hero adapter on the same base and settings, with the same caption dialect and one
-reference. It runs here at 124 frames instead of the model card's 22, as a whole shot rather
-than a single next key.</p>
+reference. It runs here as a whole shot of 124 frames. The model card's setting is 22 frames for a single next key.</p>
 <p><strong>High points</strong></p>
 <ul>
 <li>The roofs, where the base model struggled and the hero adapter was usable as is on both attempts.
   The boats drifting behind her are a nice touch, and
-  the take shows why adapters are worth having: it improved on the base model here, with more delicacy than we expected it to handle.</li>
+  the take shows why adapters are worth having: it improved on the base model here. It moved more delicately than we expected.</li>
 </ul>
 <p><strong>Low points</strong></p>
 <ul>
@@ -1202,8 +1195,7 @@ than a single next key.</p>
 <li>The train has the same hair flicker as the seq adapter.</li>
 </ul></div>
 <div class="prose"><h3 id="driven">How each route was driven</h3>
-<p>We wrote each prompt from its vendor's guide and checked it against the brief and the stills. What to avoid is written as what should
-happen instead: the brief's request for no added rendering, gloss or depth of field became “matte paper grain, even focus across the whole frame” in the H3 API prompt.</p>
+<p>We wrote each prompt from its vendor's guide and checked it against the brief and the stills. Each thing to avoid is written as the thing that should happen. The brief's request for no added rendering, gloss or depth of field became “matte paper grain, even focus across the whole frame” in the MiniMax H3 API prompt.</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -1226,7 +1218,7 @@ happen instead: the brief's request for no added rendering, gloss or depth of fi
 <tr>
 <td><strong>FLUX 3</strong></td>
 <td>121 frames at 24 fps, 1280x704</td>
-<td>Partner image-to-video node, 720p, no seed. Timestamped beats; a short Subject line that only pins which way she faces (Black Forest Labs: prompt the motion, not the scene); the drawn look last, as a continuity constraint.</td>
+<td>Partner image-to-video node, 720p, no seed. Timestamped beats; a short Subject line that only pins which way she faces (Black Forest Labs' guide: prompt the motion and leave the scene out of the prompt); the drawn look last, as a continuity constraint.</td>
 </tr>
 <tr>
 <td><strong>Wan 3.0</strong></td>
@@ -1239,12 +1231,12 @@ happen instead: the brief's request for no added rendering, gloss or depth of fi
 <td>Open weights on Floyo GPUs (30 steps). No prompt expansion, so the prompt is written by hand in MiniMax's documented structure for the open weights. The first-frame path stretches its input, so it gets a centre crop of the still at the output aspect.</td>
 </tr>
 <tr>
-<td><strong>seq adapter, 124f</strong></td>
+<td><strong>Seq adapter, 124 frames</strong></td>
 <td>124 frames at 24 fps, 1344x768</td>
 <td>Our seq adapter, a LoRA on the H3 open weights (reference-to-video, 55 steps), with the still as its one reference. The caption dialect it was trained on: alignment line, Subject, Action, Camera, Preserve.</td>
 </tr>
 <tr>
-<td><strong>hero adapter, 124f</strong></td>
+<td><strong>Hero adapter, 124 frames</strong></td>
 <td>124 frames at 24 fps, 1344x768</td>
 <td>Our hero adapter on the same base and settings (55 steps), one reference, same caption dialect.</td>
 </tr>
@@ -1274,24 +1266,24 @@ twos score per take.</p></div>
 </thead>
 <tbody>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.87</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">–</td>
 <td>Partly</td>
 <td style="text-align: right;">0.07</td>
 <td>Digital 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1301,7 +1293,7 @@ twos score per take.</p></div>
 <td style="text-align: right;">0.23</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1311,7 +1303,7 @@ twos score per take.</p></div>
 <td style="text-align: right;">0.18</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1321,7 +1313,7 @@ twos score per take.</p></div>
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1331,7 +1323,7 @@ twos score per take.</p></div>
 <td style="text-align: right;">0.94</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Morphing</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1341,7 +1333,7 @@ twos score per take.</p></div>
 <td style="text-align: right;">0.70</td>
 <td>Digital 2D</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1351,7 +1343,7 @@ twos score per take.</p></div>
 <td style="text-align: right;">0.24</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -1361,7 +1353,7 @@ twos score per take.</p></div>
 <td style="text-align: right;">0.95</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -1371,47 +1363,47 @@ twos score per take.</p></div>
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">1.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">1.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.90</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.04</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 </tbody>
 </table></div></div>
@@ -1438,24 +1430,24 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 </thead>
 <tbody>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">1</td>
 <td>No</td>
 <td style="text-align: right;">0.20</td>
 <td>Vector</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Partly</td>
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1465,7 +1457,7 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 <td style="text-align: right;">0.66</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1475,7 +1467,7 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 <td style="text-align: right;">1.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1485,7 +1477,7 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 <td style="text-align: right;">0.20</td>
 <td>Vector</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1495,7 +1487,7 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 <td style="text-align: right;">0.36</td>
 <td>Vector</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1505,7 +1497,7 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 <td style="text-align: right;">0.59</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1515,7 +1507,7 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 <td style="text-align: right;">0.61</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -1525,7 +1517,7 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 <td style="text-align: right;">0.50</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -1535,47 +1527,47 @@ By eye, Seedance's two attempts show how far apart two seeds of a commercial mod
 <td style="text-align: right;">0.39</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.68</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.73</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.65</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.73</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 </tbody>
 </table></div></div>
@@ -1600,24 +1592,24 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 </thead>
 <tbody>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">1.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.57</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1627,7 +1619,7 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1637,7 +1629,7 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 <td style="text-align: right;">0.02</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1647,7 +1639,7 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 <td style="text-align: right;">0.83</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1657,7 +1649,7 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 <td style="text-align: right;">0.94</td>
 <td>Digital 2D</td>
 <td>AI smear / ghosting; Wrong timing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1667,7 +1659,7 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 <td style="text-align: right;">0.28</td>
 <td>–</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1677,7 +1669,7 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 <td style="text-align: right;">0.05</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -1687,7 +1679,7 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 <td style="text-align: right;">0.01</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -1697,51 +1689,51 @@ and this is the shot where its lack of range first showed. FLUX 3 turned the sce
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">1.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">1.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td>Yes</td>
 <td style="text-align: right;">1.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.50</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 </tbody>
 </table></div></div>
-<div class="prose"><p><strong>In the grading.</strong> The bike asks for tracking and weather, and the H3 API, the open weights and the seq adapter all delivered.
+<div class="prose"><p><strong>In the grading.</strong> The bike asks for tracking and weather, and the MiniMax H3 API, the open weights and the seq adapter all delivered.
 The seq adapter's first attempt stood out for the trees it added. Seedance's first
 attempt has the abrupt ending behind our note on its timing, and FLUX 3's second roll froze the rain, which left it unusable.</p></div>
 <div class="prose"><h4 id="shot-03e">03e Station platform · Wide, action</h4></div>
@@ -1763,24 +1755,24 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 </thead>
 <tbody>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td>Partly</td>
 <td style="text-align: right;">0.73</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">1</td>
 <td>Partly</td>
 <td style="text-align: right;">0.63</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Line boil; Colour flicker; Identity drift</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1790,7 +1782,7 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 <td style="text-align: right;">0.55</td>
 <td>Classic 2D</td>
 <td>Wrong timing</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1800,7 +1792,7 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 <td style="text-align: right;">0.64</td>
 <td>Classic 2D</td>
 <td>Wrong timing</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1810,7 +1802,7 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 <td style="text-align: right;">0.08</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Line boil; Identity drift; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1820,7 +1812,7 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 <td style="text-align: right;">0.00</td>
 <td>Digital 2D</td>
 <td>AI smear / ghosting; Identity drift; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1830,7 +1822,7 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 <td style="text-align: right;">0.75</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1840,7 +1832,7 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 <td style="text-align: right;">0.76</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -1850,7 +1842,7 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 <td style="text-align: right;">0.73</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Line boil; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -1860,47 +1852,47 @@ attempt has the abrupt ending behind our note on its timing, and FLUX 3's second
 <td style="text-align: right;">0.75</td>
 <td>–</td>
 <td>AI smear / ghosting; Line boil; Identity drift; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td>Yes</td>
 <td style="text-align: right;">0.50</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.33</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Identity drift; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">1</td>
 <td>No</td>
 <td style="text-align: right;">0.70</td>
 <td>–</td>
 <td>AI smear / ghosting; Line boil; Identity drift; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">0</td>
 <td>Partly</td>
 <td style="text-align: right;">0.39</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Line boil; Identity drift; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 </tbody>
 </table></div></div>
@@ -1925,24 +1917,24 @@ routes came apart. The seq adapter's first attempt holds the story together well
 </thead>
 <tbody>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td>Partly</td>
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">2</td>
 <td>Partly</td>
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1952,7 +1944,7 @@ routes came apart. The seq adapter's first attempt holds the story together well
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -1962,7 +1954,7 @@ routes came apart. The seq adapter's first attempt holds the story together well
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1972,7 +1964,7 @@ routes came apart. The seq adapter's first attempt holds the story together well
 <td style="text-align: right;">0.91</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -1982,7 +1974,7 @@ routes came apart. The seq adapter's first attempt holds the story together well
 <td style="text-align: right;">0.89</td>
 <td>Vector</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -1992,7 +1984,7 @@ routes came apart. The seq adapter's first attempt holds the story together well
 <td style="text-align: right;">0.12</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -2002,7 +1994,7 @@ routes came apart. The seq adapter's first attempt holds the story together well
 <td style="text-align: right;">0.04</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -2012,7 +2004,7 @@ routes came apart. The seq adapter's first attempt holds the story together well
 <td style="text-align: right;">0.00</td>
 <td>–</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -2022,53 +2014,52 @@ routes came apart. The seq adapter's first attempt holds the story together well
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td>Partly</td>
 <td style="text-align: right;">0.94</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">1</td>
 <td>Partly</td>
 <td style="text-align: right;">1.00</td>
 <td>Classic 2D</td>
 <td>AI smear / ghosting; Colour flicker; Identity drift; Morphing</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td>Partly</td>
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">2</td>
 <td>Partly</td>
 <td style="text-align: right;">0.00</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 </tbody>
 </table></div></div>
 <div class="prose"><p><strong>In the grading.</strong> The slow pull-back over a town with a tiny figure punishes invented action. The H3 routes and FLUX 3 gave her actions that do not read,
-Wan 3.0 had trouble with the sheet on both attempts, and one Seedance take grew the blanket. The hero adapter did less, and did it
-well on both attempts, with more delicacy than we expected from it.</p></div>
+Wan 3.0 had trouble with the sheet on both attempts, and one Seedance take grew the blanket. The hero adapter did less and did it well on both attempts, more delicately than we expected.</p></div>
 <div class="prose"><h4 id="shot-05b">05b The peephole · Fisheye</h4></div>
 <div class="shot-head"><figure class="img"><img src="media/stills/05b_fisheye_peephole.jpg" alt="05b The peephole: the still" loading="lazy" decoding="async"><figcaption>The still, the first frame every route was given.</figcaption></figure><div class="brief"><p>View through a door peephole from inside a flat. Emmy stands on the stairwell landing, rain-wet, a parcel under one arm, fist raised to knock.</p><p class="label">Camera</p><p>Fixed. This is the peephole, so the circle, the fisheye curve and the dark surround never move or change size.</p><p class="label">Beats</p><ul><li>about 0.8 s and 1.4 s: she knocks twice on the door (her fist moves toward camera and back).</li><li>1.5-3.0 s: she waits, shifts the parcel under her arm, and a drop falls from her hair.</li><li>3.0-4.5 s: she leans in toward the peephole and squints, her face growing larger and bending more in the lens.</li><li>4.5-5.0 s: she holds there, looking straight into the lens.</li></ul><p class="label">Must hold</p><p>Fisheye distortion stays consistent with the still. Ceiling lamp and stair rail stay in place.</p></div></div>
 <figure class="vid"><video id="v13" controls muted playsinline preload="metadata" poster="media/grids/05b_fisheye_peephole_attempt1.jpg" aria-label="05b The peephole, Attempt 1: seed 42 (FLUX 3 roll 1): the still and seven routes side by side"><source src="media/grids/05b_fisheye_peephole_attempt1.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v13" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v13" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v13" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>05b The peephole · Attempt 1: seed 42 (FLUX 3 roll 1)</figcaption></figure>
@@ -2088,24 +2079,24 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 </thead>
 <tbody>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td>Yes</td>
 <td style="text-align: right;">0.59</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>no</td>
+<td>No</td>
 </tr>
 <tr>
-<td>H3 API</td>
+<td>MiniMax H3 API</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.53</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -2115,7 +2106,7 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 <td style="text-align: right;">0.78</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>Seedance 2.5</td>
@@ -2125,7 +2116,7 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 <td style="text-align: right;">0.63</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -2135,7 +2126,7 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 <td style="text-align: right;">0.66</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>FLUX 3</td>
@@ -2145,7 +2136,7 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 <td style="text-align: right;">0.86</td>
 <td>Vector</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -2155,7 +2146,7 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 <td style="text-align: right;">0.77</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>Wan 3.0</td>
@@ -2165,7 +2156,7 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 <td style="text-align: right;">0.73</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -2175,7 +2166,7 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 <td style="text-align: right;">0.60</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
 <td>H3 open weights</td>
@@ -2185,51 +2176,51 @@ well on both attempts, with more delicacy than we expected from it.</p></div>
 <td style="text-align: right;">0.53</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.89</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>seq 124f</td>
+<td>Seq adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">2</td>
 <td>Partly</td>
 <td style="text-align: right;">0.82</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.63</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>as is</td>
+<td>As is</td>
 </tr>
 <tr>
-<td>hero 124f</td>
+<td>Hero adapter, 124 frames</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">3</td>
 <td>Yes</td>
 <td style="text-align: right;">0.72</td>
 <td>Classic 2D</td>
 <td>–</td>
-<td>with fixes</td>
+<td>With fixes</td>
 </tr>
 </tbody>
 </table></div></div>
-<div class="prose"><p><strong>In the grading.</strong> The peephole is a contact shot. The first H3 API attempt punches the lens, and
+<div class="prose"><p><strong>In the grading.</strong> The peephole is a contact shot. The first MiniMax H3 API attempt punches the lens, and
 the second lands the fist in a more acceptable place, with some humour.
 The open weights placed the fist well on both attempts, and the takes are funny.
 Wan 3.0 animated well and put the fist somewhere odd both times. The seq adapter's first attempt
