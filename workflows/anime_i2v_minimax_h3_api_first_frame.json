@@ -1,0 +1,72 @@
+{
+ "1": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "#inputs/FIRST_FRAME.png"
+  },
+  "_meta": {
+   "title": "FIRST FRAME: your key drawing (replace FIRST_FRAME.png)"
+  }
+ },
+ "10": {
+  "class_type": "MiniMaxH3FirstLastFrameToVideo_floyo",
+  "inputs": {
+   "first_frame": [
+    "1",
+    0
+   ],
+   "prompt": "Picture 1 aligns with the 0.00-second mark of the target video. One continuous 5-second shot. Subject: 2D hand-drawn lofi anime: thin grainy pencil line, flat pale colour laid in loosely, light sparse shading, soft round blush, lots of open paper white, matte paper grain, even focus across the whole frame; a wide view of a wooden roadside bus shelter on an empty Nordic country road in steady late-afternoon rain, its ceiling lamp glowing warm; the young blonde elf woman with a top bun, in a pale blue jacket with a white collar, a black turtleneck and cream trousers, sits barefoot on the bench, her brown shoes drying on the bench beside her; a bus-stop sign and a board reading \"TIMETABLE\" stand at the roadside, with birch trees, a fence and a red barn across the flat fields. Action: From start to finish steady rain falls in thin slanting lines, drops ring outward in the puddles on the road, and the shelter lamp glows at one even brightness. From 0 to about 2.5 seconds she swings her bare feet slowly, once or twice, then her feet come to rest. At about 3 seconds she turns her head to look down the road toward the right side of the frame. From 4 to 5 seconds she holds that look while the birch branches sway slightly in the wind. Camera: a static wide shot that holds perfectly still, so each small movement reads clearly against the rain. Preserve: the quiet stillness, with only small, gentle movements; her shoes resting on the bench beside her for the whole clip; her face, hair and clothes; the shelter, sign, birches and barn in their places; the same thin pencil line, flat pale colour and open paper white in every frame, from the first frame to the last. Sound: steady rain drumming on the shelter roof and pattering into the puddles, with a light wind in the birches. The soundtrack is natural sound alone.",
+   "duration": "5",
+   "resolution": "2K",
+   "seed": 42,
+   "prompt_expansion_mode": "balanced"
+  },
+  "_meta": {
+   "title": "MiniMax H3 API: first frame to 2D animation (last frame left empty)"
+  }
+ },
+ "90": {
+  "class_type": "VideoToFrames",
+  "inputs": {
+   "video_url": [
+    "10",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "Frames + the model's native frame rate (output 2)"
+  }
+ },
+ "91": {
+  "class_type": "CreateVideo",
+  "inputs": {
+   "images": [
+    "90",
+    0
+   ],
+   "fps": [
+    "90",
+    2
+   ],
+   "bit_depth": 8
+  },
+  "_meta": {
+   "title": "Create video at the model's native frame rate"
+  }
+ },
+ "92": {
+  "class_type": "SaveVideo",
+  "inputs": {
+   "video": [
+    "91",
+    0
+   ],
+   "filename_prefix": "video/anime_i2v_minimax_h3_api_first_frame",
+   "format": "auto",
+   "codec": "auto"
+  },
+  "_meta": {
+   "title": "Save video"
+  }
+ }
+}

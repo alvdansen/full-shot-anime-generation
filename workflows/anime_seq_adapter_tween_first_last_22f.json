@@ -1,0 +1,307 @@
+{
+ "92": {
+  "_meta": {
+   "title": "Save Video"
+  },
+  "inputs": {
+   "codec": "auto",
+   "video": [
+    "130",
+    0
+   ],
+   "format": "auto",
+   "format.codec": "auto",
+   "filename_prefix": "video/anime_seq_adapter_tween"
+  },
+  "class_type": "SaveVideo"
+ },
+ "119": {
+  "_meta": {
+   "title": "Load VAE"
+  },
+  "inputs": {
+   "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+  },
+  "class_type": "VAELoader"
+ },
+ "120": {
+  "_meta": {
+   "title": "Load VAE"
+  },
+  "inputs": {
+   "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+  },
+  "class_type": "VAELoader"
+ },
+ "121": {
+  "_meta": {
+   "title": "VAE Decode Audio"
+  },
+  "inputs": {
+   "vae": [
+    "120",
+    0
+   ],
+   "samples": [
+    "125",
+    0
+   ]
+  },
+  "class_type": "VAEDecodeAudio"
+ },
+ "122": {
+  "_meta": {
+   "title": "VAE Decode"
+  },
+  "inputs": {
+   "vae": [
+    "119",
+    0
+   ],
+   "samples": [
+    "125",
+    0
+   ]
+  },
+  "class_type": "VAEDecode"
+ },
+ "123": {
+  "_meta": {
+   "title": "KSamplerSelect"
+  },
+  "inputs": {
+   "sampler_name": "euler"
+  },
+  "class_type": "KSamplerSelect"
+ },
+ "124": {
+  "_meta": {
+   "title": "BasicScheduler"
+  },
+  "inputs": {
+   "model": [
+    "145",
+    0
+   ],
+   "steps": 55,
+   "denoise": 1.0,
+   "scheduler": "simple"
+  },
+  "class_type": "BasicScheduler"
+ },
+ "125": {
+  "_meta": {
+   "title": "SamplerCustomAdvanced"
+  },
+  "inputs": {
+   "noise": [
+    "129",
+    0
+   ],
+   "guider": [
+    "126",
+    0
+   ],
+   "sigmas": [
+    "124",
+    0
+   ],
+   "sampler": [
+    "123",
+    0
+   ],
+   "latent_image": [
+    "136",
+    1
+   ]
+  },
+  "class_type": "SamplerCustomAdvanced"
+ },
+ "126": {
+  "_meta": {
+   "title": "BasicGuider"
+  },
+  "inputs": {
+   "model": [
+    "145",
+    0
+   ],
+   "conditioning": [
+    "136",
+    0
+   ]
+  },
+  "class_type": "BasicGuider"
+ },
+ "127": {
+  "_meta": {
+   "title": "MiniMax H3 open weights, reference-to-video (the base the seq adapter was trained on)"
+  },
+  "inputs": {
+   "unet_name": "minimax_h3_ref2va_bf16.safetensors",
+   "weight_dtype": "default"
+  },
+  "class_type": "UNETLoader"
+ },
+ "128": {
+  "_meta": {
+   "title": "Load CLIP"
+  },
+  "inputs": {
+   "type": "minimax",
+   "device": "default",
+   "clip_name": "qwen3vl_32b_minimax_h3_bf16.safetensors"
+  },
+  "class_type": "CLIPLoader"
+ },
+ "129": {
+  "_meta": {
+   "title": "RandomNoise"
+  },
+  "inputs": {
+   "noise_seed": 42
+  },
+  "class_type": "RandomNoise"
+ },
+ "130": {
+  "_meta": {
+   "title": "Create video at 24 fps (H3's native rate)"
+  },
+  "inputs": {
+   "fps": 24.0,
+   "audio": [
+    "121",
+    0
+   ],
+   "images": [
+    "122",
+    0
+   ],
+   "bit_depth": 10,
+   "color_space": "sRGB"
+  },
+  "class_type": "CreateVideo"
+ },
+ "131": {
+  "_meta": {
+   "title": "seconds -> frames, snapped to 17n+5"
+  },
+  "inputs": {
+   "values.a": [
+    "132",
+    0
+   ],
+   "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
+  },
+  "class_type": "ComfyMathExpression"
+ },
+ "132": {
+  "_meta": {
+   "title": "CLIP LENGTH (seconds) -> frames, snapped to 17n+5 at 24 fps"
+  },
+  "inputs": {
+   "value": 0.92
+  },
+  "class_type": "PrimitiveFloat"
+ },
+ "136": {
+  "_meta": {
+   "title": "MiniMax H3 Reference to Video"
+  },
+  "inputs": {
+   "vae": [
+    "119",
+    0
+   ],
+   "clip": [
+    "128",
+    0
+   ],
+   "width": 1344,
+   "height": 768,
+   "length": [
+    "131",
+    1
+   ],
+   "prompt": [
+    "138",
+    0
+   ],
+   "audio_vae": [
+    "120",
+    0
+   ],
+   "ref_image_size": "max",
+   "ref_images.ref_image_0": [
+    "137",
+    0
+   ],
+   "ref_images.ref_image_1": [
+    "139",
+    0
+   ]
+  },
+  "class_type": "MiniMaxH3ReferenceToVideo"
+ },
+ "137": {
+  "_meta": {
+   "title": "FIRST FRAME: your key drawing -> <Picture 1> (replace FIRST_FRAME.png)"
+  },
+  "inputs": {
+   "image": "#inputs/FIRST_FRAME.png"
+  },
+  "class_type": "LoadImage",
+  "is_changed": [
+   "c6d50ed467bfdb31067cc5d2d2f49348eeb204a424f9c85a834e987611c2205e"
+  ]
+ },
+ "138": {
+  "_meta": {
+   "title": "Prompt: alignment line, then Subject, Action, Camera, Preserve. If you change CLIP LENGTH, set the Picture 2 mark to (frames - 1) / 24 seconds for the frame count it snaps to"
+  },
+  "inputs": {
+   "value": "Picture 1 aligns with the 0.00-second mark of the target video; Picture 2 aligns with the 0.88-second mark. Subject: Hand-drawn lofi anime, thin grainy pencil line, flat pale colour; a door-peephole view of Emmy, rain-wet, parcel under one arm, fist raised high at the right edge of the round lens, on a stairwell landing; animated on twos. Action: Emmy knocks twice on the door beside the peephole, her fist swinging forward to strike the door just past the right edge of the lens and drawing back each time, so her face stays in view, then she lowers her hand toward her chest. Camera: the peephole view stays fixed, with the round lens, its curve and the dark surround holding their size. Preserve: the fisheye curve, the ceiling lamp and stair rail in place, the pencil line and the on-twos rhythm."
+  },
+  "class_type": "PrimitiveStringMultiline"
+ },
+ "139": {
+  "_meta": {
+   "title": "LAST FRAME: the next key -> <Picture 2> (replace LAST_FRAME.png)"
+  },
+  "inputs": {
+   "image": "#inputs/LAST_FRAME.png"
+  },
+  "class_type": "LoadImage",
+  "is_changed": [
+   "3a3505fa37cd56f848a0b618ed9492c93d911ee96db91052b8be305d25727887"
+  ]
+ },
+ "145": {
+  "_meta": {
+   "title": "Sigma Shift - video 12.0 / audio 3.0 (required)"
+  },
+  "inputs": {
+   "model": [
+    "146",
+    0
+   ],
+   "shift_audio": 3.0,
+   "shift_video": 12.0
+  },
+  "class_type": "MiniMaxH3SigmaShift"
+ },
+ "146": {
+  "_meta": {
+   "title": "seq adapter LoRA: 1.0 for seq; set 0 (or bypass) for the H3 open weights on this reference-to-video path"
+  },
+  "inputs": {
+   "model": [
+    "127",
+    0
+   ],
+   "lora_name": "h3_seq_step12000.safetensors",
+   "strength_model": 1.0
+  },
+  "class_type": "LoraLoaderModelOnly"
+ }
+}

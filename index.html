@@ -1,0 +1,2260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Full-shot anime generation</title>
+<meta name="description" content="Anime can now be generated a whole shot at a time, scene and motion together, from a single first frame. We compared seven video routes on six shots to find the ones that move convincingly with little work from an artist on the in-betweens, then regenerated one second of a failed take with our seq adapter.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@500;600;650;700;750&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root {
+  --bg: #F7F6F2; --surface: #FFFFFF; --ink: #1D2321; --muted: #5A6561; --rule: #DAD9D1;
+  --accent: #2D6A99; --accent-soft: #E7EFF6; --warm: #9A5B22; --video-bg: #0F1211; --code: #F0EFE9;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "Inter Tight", "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121514; --surface: #1A1F1E; --ink: #E5EAE8; --muted: #9EAAA6; --rule: #2E3634;
+  --accent: #8EC3EA; --accent-soft: #1C2A35; --warm: #E3A867; --video-bg: #050606; --code: #1F2523; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121514; --surface: #1A1F1E; --ink: #E5EAE8; --muted: #9EAAA6; --rule: #2E3634;
+  --accent: #8EC3EA; --accent-soft: #1C2A35; --warm: #E3A867; --video-bg: #050606; --code: #1F2523; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.62 var(--serif); overflow-x: hidden; }
+a { color: var(--accent); text-underline-offset: 2px; }
+.top { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--rule); }
+.top .bar { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 12px; padding: 0 16px; }
+.top nav { flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); }
+.top nav::-webkit-scrollbar { display: none; }
+.top ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; white-space: nowrap; }
+.top a { display: block; padding: 14px 10px; font: 600 14px/1 var(--sans); color: var(--muted); text-decoration: none; letter-spacing: .01em; }
+.top a:hover, .top a:focus-visible { color: var(--ink); }
+.top a.part { color: var(--accent); }
+.theme { flex: 0 0 auto; font: 600 13px/1 var(--sans); color: var(--muted); background: none; border: 1px solid var(--rule); border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+main { max-width: 1200px; margin: 0 auto; padding: 8px 16px 96px; }
+.prose > * { max-width: 72ch; }
+.prose > .tw { max-width: 100%; }
+h1, h2, h3, h4 { font-family: var(--sans); line-height: 1.12; text-wrap: balance; letter-spacing: -.01em; }
+h1 { font-size: clamp(34px, 5.6vw, 58px); font-weight: 750; margin: 36px 0 12px; }
+h1 + p em { font-size: 1.12em; color: var(--muted); font-style: normal; }
+h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 750; margin: 72px 0 12px; padding-top: 16px; border-top: 3px solid var(--ink); }
+h3 { font-size: 24px; font-weight: 700; margin: 48px 0 8px; }
+h4 { font-size: 20px; font-weight: 700; margin: 40px 0 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
+p, li { margin: .55em 0; }
+ol, ul { padding-left: 1.3em; }
+strong { font-weight: 650; }
+code { font-family: var(--mono); font-size: .82em; background: var(--code); border: 1px solid var(--rule); border-radius: 4px; padding: 1px 5px; overflow-wrap: anywhere; }
+.tw { overflow-x: auto; margin: 16px 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; font: 14px/1.45 var(--sans); font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; text-align: left; }
+th { font-size: 12px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+td { min-width: 4.5em; }
+td[style*="right"], th[style*="right"] { white-space: nowrap; }
+.tw code { white-space: nowrap; overflow-wrap: normal; }
+tr:last-child td { border-bottom: 0; }
+figure { margin: 18px 0; }
+figcaption { font: 14px/1.45 var(--sans); color: var(--muted); margin-top: 8px; }
+.vid video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--video-bg); border-radius: 8px; }
+.vid.small video { aspect-ratio: auto; }
+.speed { display: none; gap: 6px; align-items: center; margin-top: 8px; font: 600 13px/1 var(--sans); color: var(--muted); }
+.js .speed { display: flex; }
+.speed button { font: 600 13px/1 var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 11px; cursor: pointer; }
+.speed button[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.img img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--rule); background: var(--surface); }
+.shot-head { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 24px; align-items: start; }
+.shot-head .brief { font-size: 16px; }
+.shot-head .brief p { margin: .3em 0 .7em; }
+.shot-head .brief ul { margin: .2em 0 .7em; }
+.label { font: 650 12px/1 var(--sans) !important; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 14px 0 4px !important; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 900px; }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+dl.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0; margin: 12px 0 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); overflow: hidden; }
+dl.stats div { padding: 10px 14px; border-bottom: 1px solid var(--rule); border-right: 1px solid var(--rule); }
+dl.stats dt { font: 650 11px/1.3 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+dl.stats dd { margin: 4px 0 0; font: 500 15px/1.35 var(--mono); }
+details.prompt { border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); margin: 10px 0; max-width: 72ch; }
+details.prompt summary { cursor: pointer; padding: 12px 14px; font: 600 15px/1.3 var(--sans); }
+details.prompt pre { margin: 0; padding: 0 14px 14px; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.55 var(--mono); color: var(--ink); }
+footer { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; font: 14px/1.5 var(--sans); color: var(--muted); border-top: 1px solid var(--rule); }
+@media (max-width: 760px) {
+  body { font-size: 17px; }
+  .shot-head, .pair { grid-template-columns: 1fr; }
+  h2 { margin-top: 56px; }
+  th, td { padding: 7px 9px; }
+  .tw table { min-width: 40em; }
+}
+</style>
+<script>
+(function () {
+  var root = document.documentElement;
+  root.classList.add('js');
+  try { var t = localStorage.getItem('cs-theme'); if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t); } catch (e) {}
+  function current() {
+    var t = root.getAttribute('data-theme');
+    if (t) return t;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    var b = document.querySelector('.theme');
+    function label() { b.textContent = current() === 'dark' ? 'Light' : 'Dark'; }
+    if (b) { label(); b.addEventListener('click', function () {
+      var n = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', n);
+      try { localStorage.setItem('cs-theme', n); } catch (e) {}
+      label();
+    }); }
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-rate]') : null;
+    if (!b) return;
+    var v = document.getElementById(b.getAttribute('data-for'));
+    if (!v) return;
+    var r = parseFloat(b.getAttribute('data-rate'));
+    v.defaultPlaybackRate = r; v.playbackRate = r;
+    var sib = b.parentNode.querySelectorAll('button');
+    for (var i = 0; i < sib.length; i++) sib[i].setAttribute('aria-pressed', sib[i] === b ? 'true' : 'false');
+  });
+  // one video at a time
+  document.addEventListener('play', function (e) {
+    var vs = document.querySelectorAll('video');
+    for (var i = 0; i < vs.length; i++) if (vs[i] !== e.target) vs[i].pause();
+  }, true);
+})();
+</script>
+</head>
+<body>
+<header class="top"><div class="bar"><nav aria-label="Contents"><ol><li><a href="#summary">Findings</a></li><li><a href="#part-a" class="part">Part A</a></li><li><a href="#setup">Setup</a></li><li><a href="#motion">1 Motion</a></li><li><a href="#signatures">2 Failures</a></li><li><a href="#range">3 Range</a></li><li><a href="#measures">4 Measures</a></li><li><a href="#part-b" class="part">Part B</a></li><li><a href="#repair">5 Repair</a></li><li><a href="#twos-clean">Twos-clean</a></li><li><a href="#studio" class="part">For studios</a></li><li><a href="#workflows" class="part">Workflows</a></li><li><a href="#reference" class="part">Reference</a></li><li><a href="#models">Routes</a></li><li><a href="#shots">Shots</a></li><li><a href="#method">Method</a></li></ol></nav><button class="theme" type="button" aria-label="Switch colour theme">Dark</button></div></header>
+<main>
+<div class="prose"><h1 id="top">Full-shot anime generation: which video models move convincingly, and a one-second repair</h1>
+<p><em>Anime can now be generated a whole shot at a time, scene and motion together, from a single first frame. We compared seven video routes on six shots to find the ones that move convincingly with little work from an artist on the in-betweens, then regenerated one second of a failed take with our seq adapter.</em></p>
+<p><strong>Alvdansen Labs</strong> · Minta Carlson, Timothy Bielec · October 2026</p>
+<p>This study is about generating anime one full shot at a time. Each shot begins with a single generated frame, not layers
+or line art. A video model renders the whole scene from it: character, background and motion together. What we set out to find is
+which models move convincingly in this style with little direct work from an artist on
+the in-betweens, the drawings that carry a movement from one pose to the next. Anime usually holds each of those drawings for two
+frames, a rhythm called twos, which gives twelve drawings to every second of screen. Keeping that cadence, and keeping the motion
+believable, is what we judged every take on.</p>
+<p>Some teams want methods built deliberately into a multi-stage animation pipeline, where an artist draws the keys and
+adapters trained on hand-drawn animation fill in the drawings around them. Our paper <a href="https://alvdansen.github.io/animating-on-twos/">Animating on Twos</a> covers that approach. This case study is
+written for AI-native teams. It stays with shots generated whole, on tools a studio can open today, and asks how well each route
+keeps the cadence and the believability of the motion.</p>
+<p>We gave seven routes the same character and the same six first frames, which we generated with Google's Nano Banana
+image models, working from hand-drawn references. A route here is a model together with the way it is run. Every route ran as a ComfyUI workflow on Floyo:
+ComfyUI is the node-graph tool in which most open video pipelines are built, and Floyo runs ComfyUI workflows in the cloud. The
+seven routes are:</p>
+<ul>
+<li>Four commercial models called through Floyo's partner nodes: MiniMax H3 API, Seedance 2.5, FLUX 3 and Wan 3.0</li>
+<li>MiniMax H3, run from its open weights</li>
+<li>Two adapters we trained on top of those weights, the seq adapter and the hero adapter</li>
+</ul>
+<p>Each route animated each first frame twice, into a 5-second shot. Our Creative
+Lead, Minta Carlson, graded every take by eye, and we measured every take frame by frame. Then we set out to repair one take that
+went wrong. Its knock hits the peephole lens instead of the door, so we regenerated that second with our seq adapter as a tween to cut
+back into the take.</p></div>
+<div class="prose"><h2 id="summary">What we found</h2>
+<p>Five findings came out of the study, the first four from the comparison and the fifth from the repair:</p>
+<ol>
+<li><strong><a href="#motion">The drawing holds before the motion does.</a></strong> Nearly every take looked hand-drawn. What separated the usable ones was
+   motion: timing, contact, and movement the shot gives no reason for.</li>
+<li><strong><a href="#signatures">Each route fails differently, and the kind of failure decides the fix.</a></strong> The four routes we found smoothest do not
+   line up from best to worst. Each tends toward a different kind of failure, and each kind has a different repair.</li>
+<li><strong><a href="#range">Two attempts that agree may show the model's bias, not its control.</a></strong> Wan 3.0 varied least between attempts and
+   tended to repeat its flaws. A second attempt buys little there, and a frame-level fix buys a lot.</li>
+<li><strong><a href="#measures">The measurements describe rhythm; the eye judges the take.</a></strong> Our cadence score did not predict which takes we would
+   use. It is a good check on rhythm and on a cleanup, and it cannot judge whether a take works.</li>
+<li><strong><a href="#repair">Generating a shot and repairing a second of it are different jobs.</a></strong> The commercial routes are built for whole shots,
+   and none of them will render a one-second span, including Seedance 2.5, which covered the most shots. The H3 open weights
+   and our seq adapter can, and they repair in different ways.</li>
+</ol>
+<p>Our final four came from the grading: Wan 3.0, the H3 open weights, the H3 API and our seq adapter were the smoothest, though each had high and low points. Those four, in bold below, are the routes we publish <a href="#workflows">workflows</a> for. The seq adapter gets two of
+them: a long generation from a first frame, and a short tween, the in-betweens that carry one key to the next. The measures are
+defined under <a href="#method">How we measured</a>.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Usable as is</th>
+<th style="text-align: right;">Usable with fixes</th>
+<th style="text-align: right;">Shots with an as-is take</th>
+<th style="text-align: right;">Twos score (median)</th>
+<th style="text-align: right;">Partner fee per clip</th>
+<th style="text-align: right;">Floyo run time (median)</th>
+<th>Workflow</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MiniMax H3 API</strong></td>
+<td style="text-align: right;">5 of 12</td>
+<td style="text-align: right;">3 of 12</td>
+<td style="text-align: right;">4 of 6</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">$0.65</td>
+<td style="text-align: right;">247 s</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">7 of 12</td>
+<td style="text-align: right;">3 of 12</td>
+<td style="text-align: right;">5 of 6</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: right;">$1.86</td>
+<td style="text-align: right;">174 s</td>
+<td>–</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">0 of 12</td>
+<td style="text-align: right;">4 of 12</td>
+<td style="text-align: right;">0 of 6</td>
+<td style="text-align: right;">0.74</td>
+<td style="text-align: right;">$0.85</td>
+<td style="text-align: right;">106 s</td>
+<td>–</td>
+</tr>
+<tr>
+<td><strong>Wan 3.0</strong></td>
+<td style="text-align: right;">3 of 12</td>
+<td style="text-align: right;">8 of 12</td>
+<td style="text-align: right;">2 of 6</td>
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">$0.50</td>
+<td style="text-align: right;">117 s</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><strong>H3 open weights</strong></td>
+<td style="text-align: right;">8 of 12</td>
+<td style="text-align: right;">1 of 12</td>
+<td style="text-align: right;">4 of 6</td>
+<td style="text-align: right;">0.45</td>
+<td style="text-align: right;">none</td>
+<td style="text-align: right;">380 s</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><strong>seq adapter, 124f</strong></td>
+<td style="text-align: right;">5 of 12</td>
+<td style="text-align: right;">4 of 12</td>
+<td style="text-align: right;">4 of 6</td>
+<td style="text-align: right;">0.91</td>
+<td style="text-align: right;">none</td>
+<td style="text-align: right;">1034 s</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>hero adapter, 124f</td>
+<td style="text-align: right;">6 of 12</td>
+<td style="text-align: right;">4 of 12</td>
+<td style="text-align: right;">4 of 6</td>
+<td style="text-align: right;">0.64</td>
+<td style="text-align: right;">none</td>
+<td style="text-align: right;">849 s</td>
+<td>–</td>
+</tr>
+</tbody>
+</table></div></div>
+<div class="prose"><h2 id="part-a">Part A · Seven routes, six shots</h2>
+<h3 id="setup">The setup</h3>
+<p>The character is Emmy: blonde elf, top bun, gold hoops, pale blue jacket with white collar, black turtleneck, cream trousers. Every route was asked to hold one look, the hand-drawn
+lofi anime of the first frames:</p>
+<ul>
+<li>thin, grainy pencil line</li>
+<li>flat, pale colour laid in loosely</li>
+<li>almost no shading, a soft round blush and lots of paper white</li>
+<li>motion that keeps the drawn look, with no added rendering, gloss or depth of field</li>
+</ul>
+<p>Each shot is a generated first frame, which we call the still, and a 5-second scene written as timed beats with a list of what
+must hold. Every route was given the still as its first frame (image-to-video from a first frame) and made two attempts at every
+shot. An attempt is fixed by its seed, the number that sets a model's random starting point. The same seed with the same inputs gives
+the same take, and a new seed gives a new one. We used seeds 42 and 1042. FLUX 3 takes no seed, so its two attempts are
+fresh rolls.</p>
+<p>The four commercial routes ran through Floyo's partner nodes, ComfyUI nodes that send the job to the vendor's service and charge a fee
+per clip. The other three ran on Floyo's GPUs. The H3 open weights are the weights MiniMax published, which can be run on hardware you
+own or rent and adapted under MiniMax's license. Our two adapters are LoRAs, small sets of trained weights loaded on top of a base
+model to steer it. We trained them on hand-drawn animation:</p>
+<ul>
+<li>the seq adapter surfaces short sequences held on twos</li>
+<li>the hero adapter draws the next key pose from the current one</li>
+</ul>
+<p><a href="https://alvdansen.github.io/animating-on-twos/">Animating on Twos</a> describes how they were made.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Shot</th>
+<th>Type</th>
+<th>Scene</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>01 Train window</strong></td>
+<td>Close-up</td>
+<td>Emmy sits by the window of a small local train on a coastal line, mid-morning, bag on her lap, looking out at the sea.</td>
+</tr>
+<tr>
+<td><strong>02 Bus shelter in the rain</strong></td>
+<td>Wide, chill</td>
+<td>A wooden roadside bus shelter on an empty Nordic country road in steady rain, late afternoon. Emmy sits on the bench barefoot, shoes drying beside her.</td>
+</tr>
+<tr>
+<td><strong>03b Bike in the downpour</strong></td>
+<td>Wide, action</td>
+<td>Emmy pedals hard along a flat coastal road toward screen right, a black sky and a wall of rain coming in from screen left.</td>
+</tr>
+<tr>
+<td><strong>03e Station platform</strong></td>
+<td>Wide, action</td>
+<td>A small-town station platform in late-afternoon light. Emmy is jumping down the last steps of the footbridge stairs with her coat half on. A conductor stands at the open train door on the right, whistle at his lips.</td>
+</tr>
+<tr>
+<td><strong>04 Roofs, pulling back</strong></td>
+<td>Zoom out</td>
+<td>Steep tiled roofs of a small harbour hill town at first light, laundry strung between houses. Emmy is a small figure on a balcony at right, hanging sheets.</td>
+</tr>
+<tr>
+<td><strong>05b The peephole</strong></td>
+<td>Fisheye</td>
+<td>View through a door peephole from inside a flat. Emmy stands on the stairwell landing, rain-wet, a parcel under one arm, fist raised to knock.</td>
+</tr>
+</tbody>
+</table></div>
+<p>We wrote each route's prompt from its vendor's guide, the same brief in each model's dialect (<a href="#driven">How each route was driven</a> has
+the detail). Each take was graded on one sheet:</p>
+<ul>
+<li>believable in-betweens, from 0 to 3</li>
+<li>whether it reads on twos</li>
+<li>what it looks like: classic 2D, digital 2D or vector</li>
+<li>the problems in it</li>
+<li>how it could be fixed</li>
+<li>its lofi-anime mood, from 0 to 3</li>
+<li>whether it is usable as is, with fixes, or not at all</li>
+</ul></div>
+<div class="prose"><h3 id="motion">1. The drawing holds before the motion does</h3>
+<p>Almost every take looked like hand-drawn anime. Of the takes we classed by look, nearly all read as classic 2D, the pencil and flat
+colour of the stills, and every take we would use as is was one of them. Yet fewer than half of the classic-2D takes were usable as is.
+Looking right was necessary and far from sufficient: the takes that failed did so between the frames, in how the drawings moved.
+<a href="https://alvdansen.github.io/animating-on-twos/">Animating on Twos</a> describes that gap for one model, and here it ran through every route we tried.</p>
+<p>Read together, the grading comments add up to a checklist for reviewing generated animation:</p>
+<ol>
+<li><strong>Believable in-betweens.</strong> Whether the drawings between the poses are ones an animator would make. Good ones carry acting, as
+   Wan 3.0 did on the bus shelter, where the take has nuance and a natural rhythm.
+   Weak ones move like a rig: on the roofs, a FLUX 3 take made Emmy look like a puppet.</li>
+<li><strong>Holding on twos.</strong> Anime is limited animation, with fewer drawings held for longer, and the holds are what make its motion feel
+   intended. Without them everything moves at one speed and the motion loses its sense of intent, as in a FLUX 3 take of the peephole.</li>
+<li><strong>Line and look.</strong> Classic 2D, the hand-drawn look of the stills, against digital 2D and vector. Vector here means the eased or
+   constant-speed interpolation of motion graphics, in which shapes slide instead of being redrawn.
+   One FLUX 3 take of the bus shelter came out as clunky vector, and
+   one hero take was light in lineweight.</li>
+<li><strong>AI smears and ghosting.</strong> Frames that cross-dissolve two drawings into one. A drawn smear frame is different, because an animator
+   places it on purpose to sell speed. A smooth FLUX 3 take on the train has smeared frames that anyone who knows what to look for will spot.</li>
+<li><strong>Morphing and drift.</strong> Shapes that swell, a character who stops being herself, line that boils from frame to frame, colour that
+   flickers. On the roofs, one Seedance take lets the blanket grow far bigger.</li>
+<li><strong>Motion the shot gives no reason for.</strong> Wan 3.0 blew Emmy's hair about inside a closed <a href="#shot-01">train</a> carriage,
+   the kind of invented motion an animator would not draw.
+   On the <a href="#shot-04">roofs</a>, the H3 API had her go through the motions of folding without folding anything.</li>
+<li><strong>Timing.</strong> Slow motion, rushed beats, endings that stop short of a settle. Seedance played the station platform in slow motion.</li>
+<li><strong>Contacts.</strong> Where a hand, a foot or a fist lands. The peephole knock was meant for the door.
+   The H3 API's first attempt punched the lens, while
+   the open weights placed the fist better (the
+   <a href="#shot-05b">peephole</a> grids show both).</li>
+<li><strong>Range.</strong> How different two attempts are, which decides whether a second attempt is worth paying for. The section on
+   <a href="#range">range</a> takes it up.</li>
+</ol>
+<p>Most of these happen across frames, not within one, which is how a take whose every frame passes can still fail. The problems flagged
+on the sheet show the same thing from the other side, because they cover only part of what went wrong. Nearly half of the rejected
+takes carry no flag at all. They fail on things only the comments record:</p>
+<ul>
+<li>timing</li>
+<li>invented motion</li>
+<li>a misplaced fist</li>
+<li>a slide into vector</li>
+<li>a blanket that grows</li>
+</ul>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>What the sheet recorded, over the 84 takes</th>
+<th style="text-align: right;">Takes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Looks like: classic 2D / digital 2D / vector</td>
+<td style="text-align: right;">71 / 4 / 5 (of 80 classed)</td>
+</tr>
+<tr>
+<td>Believable in-between: 3 / 2 / 1 / 0</td>
+<td style="text-align: right;">40 / 29 / 9 / 5 (of 83 graded)</td>
+</tr>
+<tr>
+<td>Reads on twos: yes / partly / no</td>
+<td style="text-align: right;">45 / 32 / 7</td>
+</tr>
+<tr>
+<td>Usable: as is / with fixes / no</td>
+<td style="text-align: right;">34 / 27 / 23</td>
+</tr>
+<tr>
+<td>Fix: none needed / regenerate with gen AI / by hand / not fixable</td>
+<td style="text-align: right;">33 / 16 / 9 / 19 (of 77 marked)</td>
+</tr>
+<tr>
+<td>Flagged: AI smear / ghosting</td>
+<td style="text-align: right;">14</td>
+</tr>
+<tr>
+<td>Flagged: morphing</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td>Flagged: identity drift</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr>
+<td>Flagged: line boil</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr>
+<td>Flagged: wrong timing</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td>Flagged: colour flicker</td>
+<td style="text-align: right;">2</td>
+</tr>
+</tbody>
+</table></div>
+<p>Restraint counts as much as invention. On the slow pull-back over the roofs, most routes gave Emmy an action that does not read. The
+hero adapter had her do very little, and we graded both of its attempts usable as is,
+because an action that makes no sense distracts more than a quiet one.</p>
+<p>The consequence for a studio is where review time goes. A single frame from almost any of these takes would pass inspection, so a take
+has to be judged in motion, at speed and slowed down, with the checklist above in mind. The speed buttons under every grid in this study
+are there for that.</p></div>
+<div class="prose"><h3 id="signatures">2. Each route fails differently</h3>
+<p>The four routes we found smoothest do not line up from best to worst, and none of them won every shot. The station platform, where
+Emmy jumps down the last stairs and runs for a closing train door, beat all seven routes. None produced a take of it usable as is,
+because the shot has too much small detail moving at speed for most models
+(the <a href="#shot-03e">platform grids</a> show each route losing it in a different way). What distinguishes the four is the kind of failure each
+tends toward. For a studio that matters more than a ranking, because the kind of failure decides the fix.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">As is · fixes · no</th>
+<th>Tends to</th>
+<th>The fix it points to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Wan 3.0</strong></td>
+<td style="text-align: right;">3 · 8 · 1</td>
+<td>come close, and the same way twice</td>
+<td>regenerate the frames that are wrong</td>
+</tr>
+<tr>
+<td><strong>H3 open weights</strong></td>
+<td style="text-align: right;">8 · 1 · 3</td>
+<td>hold a shot or lose it</td>
+<td>a take it holds rarely needs work; a take it loses needs another attempt or another route</td>
+</tr>
+<tr>
+<td><strong>MiniMax H3 API</strong></td>
+<td style="text-align: right;">5 · 3 · 4</td>
+<td>invent action and contact</td>
+<td>edit: retime frames onto twos, repair the invented beat</td>
+</tr>
+<tr>
+<td><strong>seq adapter, 124f</strong></td>
+<td style="text-align: right;">5 · 4 · 3</td>
+<td>keep the motion and, when it fails, lose the drawing</td>
+<td>repair the drawing where the motion is worth keeping</td>
+</tr>
+</tbody>
+</table></div>
+<p>Wan 3.0 is the steadiest of the four on mood and the least likely to lose a take outright: we rejected only
+one of its takes and flagged no problem on any of them. Its weakness is that it comes close in the same way twice,
+which the section on <a href="#range">agreement between attempts</a> takes up. For most of its takes, the fix the grading named was to regenerate
+frames.</p>
+<p>The H3 open weights gave more takes usable as is than any other route and started closest to the still. Their failures are total, not
+partial: on the platform too many of their frames are bad, and
+on the roofs one attempt goes wrong as she lifts the sheet.</p>
+<p>The H3 API tends to invent. It gave Emmy something to do on the roofs that she is not doing, on both attempts, and its first peephole
+attempt drove the fist into the lens. On the platform its characters fell apart, with flickering and degradation.
+Its cadence also slips off twos in places, and there an edit that retimes the frames is a fine solution.</p>
+<p>FLUX 3 sits outside the four for a plain reason: it gave no take usable as is, and its takes slid into vector and smeared their
+in-betweens more often than any other route's. Seedance 2.5 sits outside for a subtler one, and it makes the clearest contrast
+with the seq adapter. Seedance gave a take usable as is on more shots than any other route and still missed our four, because most of
+its misses were timing misses. That is a pattern we saw in the strongest commercial models: high fidelity, with timing that can be very strange.</p>
+<p>The seq adapter is the opposite case. It held twos most steadily of all seven routes and earned the highest in-between grades. It
+also added life the brief did not ask for: on the <a href="#shot-03b">bike</a>
+it was the first route to add trees to the scene, and they are a fine touch.
+Where it failed, the drawing gave way while the motion held. Every rejected take of it is flagged for morphing, and
+on its second platform attempt the movement is good while everything else fails to hold up.</p>
+<p>Seedance keeps the drawing and loses the timing, and the seq adapter keeps the timing and sometimes loses the drawing. Which of the two a
+production can repair more cheaply is the real choice between them.</p></div>
+<div class="prose"><h3 id="range">3. Agreement between attempts can be the model's bias</h3>
+<p>It is tempting to read two attempts that agree as a model that understood the prompt. The grading read Wan 3.0's agreement the
+other way. On the <a href="#shot-02">bus shelter</a> its two attempts were very consistent,
+and we tend to read consistency like that as heavy-handed pretraining that keeps a model's output stylistically uniform.
+That is a strength while the shot sits where the model is biased, and a risk for a precise, complex shot it is not biased toward.
+The notes on the other shots bear that out. On the train, the roofs and the <a href="#shot-05b">peephole</a>, the second attempt carries the first
+one's flaw. On the bike the two attempts are so alike that we read a sizeable bias in the model:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Wan 3.0, by shot</th>
+<th>Attempt 1 (seed 42)</th>
+<th>Attempt 2 (seed 1042)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>02 Bus shelter in the rain</td>
+<td>Subtle acting and natural beats</td>
+<td>Also good, and very close to attempt 1</td>
+</tr>
+<tr>
+<td>01 Train window</td>
+<td>Hair blowing inside the closed carriage</td>
+<td>The same flaw, less pronounced</td>
+</tr>
+<tr>
+<td>03b Bike in the downpour</td>
+<td>A good ending and a weaker beginning</td>
+<td>Better, and very similar to attempt 1</td>
+</tr>
+<tr>
+<td>04 Roofs, pulling back</td>
+<td>Trouble with how she raises the sheet</td>
+<td>The same trouble, as expected</td>
+</tr>
+<tr>
+<td>05b The peephole</td>
+<td>Good animation, with the fist landing somewhere odd</td>
+<td>The same fist problem in an otherwise good animation</td>
+</tr>
+</tbody>
+</table></div>
+<p>The measurement agrees with the grading here. Seed spread is our measure of how different a route's two attempts look over the length
+of the clip. It is lowest for Wan 3.0 and highest for the two adapters, whose attempts differ by more than twice as much.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Seed spread (median)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">4.1</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">4.7</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">6.2</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">7.0</td>
+</tr>
+<tr>
+<td>MiniMax H3 API</td>
+<td style="text-align: right;">7.6</td>
+</tr>
+<tr>
+<td>seq adapter, 124f</td>
+<td style="text-align: right;">10.6</td>
+</tr>
+<tr>
+<td>hero adapter, 124f</td>
+<td style="text-align: right;">10.6</td>
+</tr>
+</tbody>
+</table></div>
+<p>A wide route rewards the second attempt instead. On the <a href="#shot-03e">platform</a> the seq adapter gave both the best take of the shot and a
+rejected one. One seed told the most coherent story of any take there; the other
+was not usable. Commercial models can show range too. On the train,
+Seedance's two attempts showed real range between generations with no adapter involved,
+although our measure scores that pair as the closest of the shot. We come back to that disagreement under <a href="#measures">measurement</a>.</p>
+<p>For a studio the consequence is practical. A second attempt from a narrow model returns the same answer with the same mistake, so the fix
+for Wan 3.0 is to regenerate the frames that are wrong and keep the rest of the take.</p></div>
+<div class="prose"><h3 id="measures">4. The measurements describe rhythm; the eye judges the take</h3>
+<p>We measured every take, and the measurements are good at what they measure:</p>
+<ul>
+<li>The <strong>twos score</strong> is the share of a clip's frame-to-frame steps that follow a strict hold, move, hold, move pattern. It separates a
+  clip held on twos from one drawn on ones, with a new drawing on every frame.</li>
+<li>The <strong>first-key gap</strong> says how far a take starts from the still it was given.</li>
+<li>The <strong>seed spread</strong> says how different two attempts look.</li>
+</ul>
+<p>None of them predicts which takes we would use. Takes graded usable as is, usable with fixes and not usable have nearly the same median
+twos score. FLUX 3 has the second-highest median twos score of the seven routes, yet no take usable as is. Even the read of twos
+by eye agrees with the score only in part. The takes read as partly on twos score well below the rest, while the takes read as fully on
+twos and as not on twos at all score alike.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Takes, by grade</th>
+<th style="text-align: right;">Takes</th>
+<th style="text-align: right;">Twos score (median)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Usable as is</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0.60</td>
+</tr>
+<tr>
+<td>Usable with fixes</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">0.64</td>
+</tr>
+<tr>
+<td>Not usable</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">0.63</td>
+</tr>
+<tr>
+<td>Reads on twos: yes</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">0.63</td>
+</tr>
+<tr>
+<td>Reads on twos: partly</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">0.37</td>
+</tr>
+<tr>
+<td>Reads on twos: no</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0.64</td>
+</tr>
+</tbody>
+</table></div>
+<p>Part of the gap comes from how the score is built. It reads the whole frame, so rain, passing scenery or a camera move animated on ones
+reads as ones even when the character holds on twos. On the slow pull-back over the <a href="#shot-04">roofs</a>, more than half of the takes score
+zero. The larger part is that the score measures rhythm and cannot see quality: a take can hold perfect twos and still put the fist
+through the lens. Range has the same limit. In the Seedance train pair the eye saw real variety, and a whole-frame difference scores the
+pair as the closest of the shot. The per-shot tables in the Reference set the twos score beside the grades for every take.</p>
+<p>We drew the same line in <a href="https://alvdansen.github.io/animating-on-twos/">Animating on Twos</a>, and it holds here. The numbers still did useful work in this study:</p>
+<ul>
+<li>They set the gate for the twos-clean trick in Part B, which cleans only takes the score finds properly on twos, and they checked that
+  the clean did what it should.</li>
+<li>The first-key gap showed that the adapters start further from the still than the image-to-video routes do.</li>
+<li>The seed spread agreed with the grading that Wan 3.0's two attempts sit close together.</li>
+</ul>
+<p>Whether a take works is a judgement for a trained eye.</p></div>
+<div class="prose"><h2 id="part-b">Part B · Redoing keyframes with the seq adapter</h2>
+<h3 id="repair">5. Generating a shot and repairing a second are different jobs</h3>
+<p>About a third of the takes in Part A were usable with a fix, and the fixes the grading named are local:</p>
+<ul>
+<li>rerun the weak opening frames of a Wan 3.0 take on the bike</li>
+<li>redo the end of a Wan 3.0 take on the platform</li>
+<li>drop one frame during Emmy's head turn from a hero take on the bus shelter</li>
+<li>slow a few frames of an H3 API take on the train to put it back on twos</li>
+</ul>
+<p>Those are repairs, not generations, and a repair asks different things of a model. It has to:</p>
+<ul>
+<li>render a short span</li>
+<li>start and end on frames that already exist in the take (its keys)</li>
+<li>hold the cadence of the take around it, so that the cut does not show</li>
+</ul>
+<h4 id="problem">The take</h4>
+<p>On the peephole shot, Emmy is meant to knock on the door. In the MiniMax H3 API's first attempt (seed 42) her fist goes
+straight into the lens and fills the view. The take is charming, but the punch on the peephole is plainly unintended, the kind of contact that marks lazy AI.
+We chose this take for the test: keep it, regenerate the knock between two of its frames, and have the fist strike the door beside the
+peephole.</p>
+<h4 id="span">The span</h4>
+<p>We cut the span from frame 8, where her fist is cocked high beside the lens, to frame 32, where her hand comes down to her chest.
+That one second holds both knocks, and both land on the lens.</p></div>
+<div class="pair"><figure class="img"><img src="media/partb/knock_first-key_frame08.jpg" alt="First key, frame 8" loading="lazy" decoding="async"><figcaption>First key: frame 8 of the source take</figcaption></figure><figure class="img"><img src="media/partb/knock_last-key_frame32.jpg" alt="Last key, frame 32" loading="lazy" decoding="async"><figcaption>Last key: frame 32</figcaption></figure></div>
+<div class="prose"><h4 id="floors">Why only two routes could run it</h4>
+<p>Here the two jobs part company. A one-second repair needs a route that will render one second, and the partner nodes will not.
+Each has a floor on clip length. Seedance 2.5, the route that covered the
+most shots in Part A, will not go below four seconds. Generating a longer clip and keeping part of it would change the
+timing between the two keys. The H3 open weights, and the seq adapter on top of them, render any length of the form 17n+5 frames.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Shortest clip it accepts (the node's duration setting)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MiniMax H3 API</td>
+<td>5 s</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td>4 s</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td>5 s</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td>2 s</td>
+</tr>
+<tr>
+<td>H3 open weights and the seq adapter</td>
+<td>any 17n+5 frames at 24 fps (22 frames span 0.88 s key to key)</td>
+</tr>
+</tbody>
+</table></div>
+<p>This is worth knowing before a pipeline depends on a partner model: the commercial models are built to generate whole shots, and their length floors rule them out of small frame-to-frame edits. So we ran only the two routes that can render the span, and added a longer seq take to see a slower knock.</p>
+<h4 id="ran">What ran</h4>
+<p>We made six takes, all given the span's first and last frames, with seeds 42 and 1042 for each of these:</p>
+<ul>
+<li>the H3 open weights at 22 frames</li>
+<li>the seq adapter at 22 frames, the nearest length the rule allows below the span's 25, so these tweens play
+  slightly faster than the original</li>
+<li>the seq adapter at 39 frames, the next length up, for a slower knock</li>
+</ul>
+<p>The prompt asked for two knocks on the door beside the peephole, with her fist swinging forward to strike the door just past the right edge of the lens and drawing back each time.</p>
+<p>The two routes take the keys differently:</p>
+<ul>
+<li>The H3 open weights ran on MiniMax's first-and-last-frame graph, which treats the two frames as fixed endpoints and fills the frames
+  between them.</li>
+<li>The seq adapter ran on the reference-to-video graph, which treats them as references, drawings to work from instead of frames to
+  reproduce. An alignment line in the prompt places them in time (“Picture 2 aligns with the 0.88-second mark” at
+  22 frames, the tween's key-to-key time).</li>
+</ul>
+<p>The published tween workflow uses the second graph.</p></div>
+<figure class="vid"><video id="v1" controls muted playsinline preload="metadata" loop poster="media/partb/knock_repair-grid.jpg" aria-label="The knock repair: keys, source take and six regenerated takes"><source src="media/partb/knock_repair-grid.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v1" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v1" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v1" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>Top: the first key, the source take over the span, the last key. Middle row: seed 42. Bottom row: seed 1042. Every tile at 24 fps; short clips hold their last drawing.</figcaption></figure>
+<div class="prose"><h4 id="measurements">What the two routes did</h4>
+<p>On our first read of the frames, the seq takes bring the fist to the right edge of the lens on both seeds, with her face in view. The
+open-weights takes still drive the fist well into the lens, which is the fault the repair was meant to remove. The
+39-frame seq take at seed 42 also smears the arm mid-swing. We have not yet graded these repairs cut back into
+the take. Until then, the grid's ¼× speed setting lets anyone judge the knock frame by frame.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Take</th>
+<th style="text-align: right;">Seed</th>
+<th style="text-align: right;">Frames</th>
+<th style="text-align: right;">Key to key (s)</th>
+<th style="text-align: right;">First-key gap</th>
+<th style="text-align: right;">Last-key gap</th>
+<th style="text-align: right;">Twos score</th>
+<th style="text-align: right;">Drawings/s</th>
+<th style="text-align: right;">Flicker</th>
+<th style="text-align: right;">Floyo run time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Source take (H3 API)</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">11.0</td>
+<td style="text-align: right;">2.46</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>H3 open weights, 22f</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">2.2</td>
+<td style="text-align: right;">2.1</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">10.3</td>
+<td style="text-align: right;">0.73</td>
+<td style="text-align: right;">65 s</td>
+</tr>
+<tr>
+<td>H3 open weights, 22f</td>
+<td style="text-align: right;">1042</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">1.9</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">9.1</td>
+<td style="text-align: right;">0.99</td>
+<td style="text-align: right;">59 s</td>
+</tr>
+<tr>
+<td>seq adapter, 22f</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">8.8</td>
+<td style="text-align: right;">8.4</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">11.4</td>
+<td style="text-align: right;">0.29</td>
+<td style="text-align: right;">409 s</td>
+</tr>
+<tr>
+<td>seq adapter, 22f</td>
+<td style="text-align: right;">1042</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">9.2</td>
+<td style="text-align: right;">8.5</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">11.4</td>
+<td style="text-align: right;">0.34</td>
+<td style="text-align: right;">329 s</td>
+</tr>
+<tr>
+<td>seq adapter, 39f</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">1.58</td>
+<td style="text-align: right;">9.0</td>
+<td style="text-align: right;">8.8</td>
+<td style="text-align: right;">0.86</td>
+<td style="text-align: right;">12.6</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">418 s</td>
+</tr>
+<tr>
+<td>seq adapter, 39f</td>
+<td style="text-align: right;">1042</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">1.58</td>
+<td style="text-align: right;">9.5</td>
+<td style="text-align: right;">10.0</td>
+<td style="text-align: right;">0.68</td>
+<td style="text-align: right;">8.2</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">318 s</td>
+</tr>
+</tbody>
+</table></div>
+<p>The measurements show how differently the two routes repair. The open weights pin the keys, starting and ending on the frames they were
+given. The seq adapter redraws them, so its first and last drawings are close to the keys without being the keys (the two gap columns).
+A seq tween cut back into the take should therefore keep the source take's key frames at the cut points. In return the seq adapter holds twos
+more steadily than the open weights at the same length, and its light pumps less through the knock than either the source take or the
+open-weights takes. Which matters more depends on the cut. A repair that must match the take frame for frame wants the pinned keys, and
+a repair whose job is the rhythm wants the redraw.</p></div>
+<div class="prose"><h3 id="twos-clean">The twos-clean trick</h3>
+<p>A model that animates on twos rarely draws a true hold. The second frame of a held pair is almost the first one, with a line shifted here
+and the colour moved a little there, so the holds shimmer when the take plays. The cure is simple: where a take is properly on twos, keep
+the more coherent frame of each held pair and show it on both frames. It is the cheapest repair in this study, because it regenerates
+nothing and works on the frames a take already has. It takes five steps:</p>
+<ol>
+<li><strong>Find the holds.</strong> Measure how much each frame changes into the next. A pair that changes far less than the frames around it (under
+   0.35 of its larger neighbour), or barely at all, is a drawing the model meant to hold for two frames.</li>
+<li><strong>Check that the take is really on twos.</strong> We clean only takes with a twos score of 0.70 or more; below that the holds are too
+   irregular to trust.</li>
+<li><strong>Pick the keeper.</strong> In each held pair, keep the frame that agrees better with the drawing before the pair and the drawing after it
+   (the smaller summed difference to both), and drop the other. That rule is our stand-in for judging which of the two frames is less coherent.</li>
+<li><strong>Hold it.</strong> Show the keeper on both frames of the pair. Frames outside a hold stay as they are.</li>
+<li><strong>Check by eye.</strong> The pick rule is a proxy, so we scrub the result and swap a pick by hand wherever the other frame is the better
+   drawing.</li>
+</ol>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Take</th>
+<th style="text-align: right;">Seed</th>
+<th style="text-align: right;">Twos score</th>
+<th style="text-align: right;">Frames in held pairs</th>
+<th style="text-align: right;">Change inside a hold, before → after</th>
+<th style="text-align: right;">Change between drawings (median)</th>
+<th style="text-align: right;">Share of all change inside holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H3 open weights, 22f</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">22 of 22</td>
+<td style="text-align: right;">0.23 → 0.01</td>
+<td style="text-align: right;">3.79</td>
+<td style="text-align: right;">6.3% → 0.3%</td>
+</tr>
+<tr>
+<td>seq adapter, 22f</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">22 of 22</td>
+<td style="text-align: right;">0.49 → 0.01</td>
+<td style="text-align: right;">3.13</td>
+<td style="text-align: right;">14.1% → 0.4%</td>
+</tr>
+<tr>
+<td>seq adapter, 22f</td>
+<td style="text-align: right;">1042</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">22 of 22</td>
+<td style="text-align: right;">0.23 → 0.01</td>
+<td style="text-align: right;">2.40</td>
+<td style="text-align: right;">9.8% → 0.5%</td>
+</tr>
+<tr>
+<td>seq adapter, 39f</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">0.86</td>
+<td style="text-align: right;">34 of 39</td>
+<td style="text-align: right;">0.23 → 0.01</td>
+<td style="text-align: right;">2.80</td>
+<td style="text-align: right;">7.6% → 0.4%</td>
+</tr>
+<tr>
+<td>H3 open weights, 22f</td>
+<td style="text-align: right;">1042</td>
+<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">not cleaned</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+</tr>
+<tr>
+<td>seq adapter, 39f</td>
+<td style="text-align: right;">1042</td>
+<td style="text-align: right;">0.68</td>
+<td style="text-align: right;">not cleaned</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+<td style="text-align: right;">–</td>
+</tr>
+</tbody>
+</table></div>
+<p>“Change inside a hold” is the mean grey-level difference between the two frames of each held pair, the shimmer the trick removes.
+“Change between drawings” is the same measure between frames that are meant to differ, for scale. The twos score and the drawings per
+second are the same before and after on every take, because by that measure these frames already were holds. What changes is what
+happens inside each hold: the part the eye catches as shimmer, which the twos score cannot see. The two takes below the
+threshold were left as generated.</p>
+<p>The video below sets the take whose holds moved most beside its cleaned version, as generated on the left and cleaned on the right, with
+frame numbers in the corners. The figure after it shows the four pairs from that take that moved most inside the
+hold, with the change amplified 8 times.</p></div>
+<figure class="vid"><video id="v2" controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-22f_seed42.jpg" aria-label="Twos-clean before and after, side by side"><source src="media/partb/twos-clean_seq-adapter-22f_seed42.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v2" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v2" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v2" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>Before and after: seq adapter, 22f, seed 42, best seen at ¼× speed.</figcaption></figure>
+<figure class="img"><img src="media/partb/twos-clean_held-pairs_seq-adapter-22f_seed42.jpg" alt="Held pairs before cleaning, with the difference between the two frames" loading="lazy" decoding="async"><figcaption>Held pairs from seq adapter, 22f, seed 42. The outlined frame is the keeper; the grey image shows what changes between the two frames of the hold, amplified 8 times.</figcaption></figure>
+<div class="prose"><p>The other cleaned takes:</p></div>
+<div class="trio"><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_h3-open-weights-22f_seed42.jpg" aria-label="Twos-clean before and after: H3 open weights, 22f, seed 42"><source src="media/partb/twos-clean_h3-open-weights-22f_seed42.mp4" type="video/mp4"></video><figcaption>H3 open weights, 22f, seed 42</figcaption></figure><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-22f_seed1042.jpg" aria-label="Twos-clean before and after: seq adapter, 22f, seed 1042"><source src="media/partb/twos-clean_seq-adapter-22f_seed1042.mp4" type="video/mp4"></video><figcaption>seq adapter, 22f, seed 1042</figcaption></figure><figure class="vid small"><video controls muted playsinline preload="metadata" loop poster="media/partb/twos-clean_seq-adapter-39f_seed42.jpg" aria-label="Twos-clean before and after: seq adapter, 39f, seed 42"><source src="media/partb/twos-clean_seq-adapter-39f_seed42.mp4" type="video/mp4"></video><figcaption>seq adapter, 39f, seed 42</figcaption></figure></div>
+<div class="prose"><h3 id="take-away">In practice</h3>
+<ul>
+<li><strong>Short spans need open weights.</strong> A repair shorter than the partner nodes' floor goes to the H3 open weights or the seq adapter, which
+  render in steps of 17 frames (22, 39, 56 frames and up).</li>
+<li><strong>Pinned or redrawn.</strong> The open weights start and end almost exactly on the keys. The seq adapter's first and last drawings sit visibly
+  off them, and in exchange it keeps a cleaner twos rhythm.</li>
+<li><strong>Holds are cleaned after generation.</strong> Twos-clean works on frames a take already has, regenerates nothing, and turns near-holds into
+  true holds, on takes that are already mostly on twos.</li>
+<li><strong>A repair is judged in the cut.</strong> The tween replaces frames inside a take that was already graded, so it is played inside the shot
+  before it is kept.</li>
+</ul></div>
+<div class="prose"><h2 id="studio">What a studio can take from this</h2>
+<p>The H3 open weights did much better than we expected going in. They gave the most takes usable as is of any route, in exchange for more setup than a partner node asks.</p>
+<p>The strongest commercial routes ran into the two problems this study kept meeting:</p>
+<ul>
+<li><strong>Timing.</strong> Seedance 2.5 gave a take usable as is on the most shots, and most of its misses were timing misses.</li>
+<li><strong>Bias.</strong> Wan 3.0 was the steadiest on mood, and its two attempts sat so close together that a second attempt gave little
+  range, which we read as a strong bias in the model.</li>
+</ul>
+<p>Our adapters performed on par with them without those problems. Neither adapter drew a timing flag, and their attempts differed more
+than any other route's. On takes usable as is, they sit between the two:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Usable as is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">7 of 12</td>
+</tr>
+<tr>
+<td>hero adapter, 124f</td>
+<td style="text-align: right;">6 of 12</td>
+</tr>
+<tr>
+<td>seq adapter, 124f</td>
+<td style="text-align: right;">5 of 12</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">3 of 12</td>
+</tr>
+</tbody>
+</table></div>
+<p>So we still see a finetuning path as a good place to start for a studio that wants:</p>
+<ul>
+<li>fidelity and style matching to its house style</li>
+<li>lower generation cost, since a run on open weights pays for GPU time and no partner fee per clip</li>
+<li>flexibility, with real range between generations</li>
+</ul>
+<p>Each of the final four points to a different follow-up:</p>
+<ul>
+<li>Wan 3.0 comes close the same way twice, so it pairs better with frame repair than with a second roll.</li>
+<li>The H3 API invents action and contact, so a studio using it should plan to edit.</li>
+<li>The H3 open weights hold a shot or lose it, so a lost take calls for another attempt or another route.</li>
+<li>The seq adapter keeps the rhythm and leaves the drawing as the thing to repair when it fails.</li>
+</ul>
+<p>A repair shorter than the partner nodes' floor on clip length needs open weights. Even then the eye decides what is kept: we also ran a
+span on the station platform, the shot that beat every route in Part A, and dropped it as too hard for every model we tried. The labor between the poses is
+still where the cost of this work sits, and these routes help with that labor under an artist's eye.</p></div>
+<div class="prose"><h2 id="workflows">Workflows</h2>
+<p>Four ComfyUI workflows in API format cover the final four routes. Wan 3.0 and the MiniMax H3 API get one each, and the
+seq adapter gets two; its LoRA can be switched off to run the H3 open weights. Each is built by the same code that made
+the takes in this study, with the study's prompt left in as an editable example. <code>FIRST_FRAME.png</code> (and <code>LAST_FRAME.png</code> for the tween)
+is where your key drawings go.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Workflow</th>
+<th>File</th>
+<th>Input</th>
+<th>Length</th>
+<th>On Floyo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wan 3.0, first frame</td>
+<td><a href="workflows/anime_i2v_wan30_first_frame.json"><code>anime_i2v_wan30_first_frame.json</code></a></td>
+<td>first frame</td>
+<td>5 s at the model's native rate (30 fps)</td>
+<td>[Floyo workflow link: to come]</td>
+</tr>
+<tr>
+<td>MiniMax H3 API, first frame</td>
+<td><a href="workflows/anime_i2v_minimax_h3_api_first_frame.json"><code>anime_i2v_minimax_h3_api_first_frame.json</code></a></td>
+<td>first frame</td>
+<td>5 s at the model's native rate (24 fps)</td>
+<td>[Floyo workflow link: to come]</td>
+</tr>
+<tr>
+<td>seq adapter, long first-frame generation</td>
+<td><a href="workflows/anime_seq_adapter_first_frame_124f.json"><code>anime_seq_adapter_first_frame_124f.json</code></a></td>
+<td>first frame (one reference)</td>
+<td>124 frames at 24 fps</td>
+<td>[Floyo workflow link: to come]</td>
+</tr>
+<tr>
+<td>seq adapter, tween between two keys</td>
+<td><a href="workflows/anime_seq_adapter_tween_first_last_22f.json"><code>anime_seq_adapter_tween_first_last_22f.json</code></a></td>
+<td>first and last frame (two references)</td>
+<td>22 frames at 24 fps</td>
+<td>[Floyo workflow link: to come]</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Setting up the seq adapter.</strong> Both seq workflows load our seq adapter in their LoRA node (LoraLoaderModelOnly). To set it up:</p>
+<ol>
+<li>Request access at <a href="https://huggingface.co/alvdansen/h3-keyframe-animation">alvdansen/h3-keyframe-animation</a> on Hugging Face.</li>
+<li>Take <code>h3_seq_step12000</code> from the repository's <code>adapters</code> folder. It is already converted for H3.</li>
+<li>Put it in your ComfyUI <code>models/loras</code> folder and select it in that node.</li>
+<li>The model card gives the license, the inference settings and the conditioning contract. The adapters run on the full H3 model, not Turbo, under MiniMax's H3 license.</li>
+</ol>
+<p>Notes on the workflows:</p>
+<ul>
+<li><strong>What the long first-frame workflow asks of it:</strong> the seq adapter was trained on two references, a window's first drawing and its natural end, rendered as 22 frames. The long first-frame workflow gives it one reference and 124 frames, which asks more of it; Part A records how it behaves there. The tween workflow matches its training.</li>
+<li><strong>Changing the tween's length:</strong> the tween's prompt opens with an alignment line that puts Picture 2 at the 0.88-second mark, the key-to-key time of 22 frames at 24 fps. If you change CLIP LENGTH, change that mark to (frames - 1) / 24 seconds for the frame count the length snaps to: 39 frames, for example, is the 1.58-second mark.</li>
+<li><strong>H3 open weights:</strong> open either seq workflow and set the LoRA strength to 0, or bypass the LoRA node. That runs the open weights on
+  the reference-to-video path. The H3 open-weights takes in this study came from MiniMax's image-to-video graph, so results with the
+  LoRA off can differ from them.</li>
+<li><strong>Frame rate:</strong> on the partner graphs the video is saved at the model's native rate, read from the model's output. On the open-weight
+  graphs it is saved at 24 fps, H3's native rate, which the length formula (17n+5 frames) also uses. A fixed rate that does
+  not match the model plays the clip too fast or too slow.</li>
+<li><strong>Prompts:</strong> the first-frame examples are the bus-shelter prompts from Part A, and the tween example is the peephole knock from Part B.
+  Each model's dialect is worth keeping in your prompts, since the structure carries as much as the words.</li>
+</ul></div>
+<details class="prompt"><summary>Example prompt: Wan 3.0, first frame</summary><pre>One continuous 5-second take, a single fixed wide shot from start to finish, beginning exactly on the first frame (image 1). Subject: Emmy, the blonde elf with a top bun, gold hoops, a pale blue jacket with a white collar, a black turtleneck and cream trousers, sits barefoot on the bench of a wooden roadside bus shelter on an empty country road in steady late-afternoon rain, her brown shoes drying on the bench beside her. Action, Segment 1 [0-5s]: For the full five seconds steady rain falls in thin pencil streaks, drops ring in the puddles on the road, and the lamp inside the shelter glows with a constant warm light. From 0 to 2.5 seconds Emmy slowly swings her bare feet, once or twice, then lets them rest. At about 3 seconds she turns her head to look down the road toward screen right. From 4 to 5 seconds she holds that look, quiet and patient, while the bare birch branches sway slightly in the wind. Camera: fixed wide shot, locked in place for all five seconds, so the falling rain and her small movements carry the stillness of the wait. Style notes: Maintain the hand-drawn lofi anime style of image 1 throughout: thin grainy pencil line, flat pale colour laid in loosely, only the faintest shading, soft round blush, wide areas of paper white. Every movement carries a hand-drawn pencil feel: each moving element keeps that same pencil line and flat colour, with matte surfaces and the whole picture in even, equal focus. Preserve: stillness, with every movement small and soft and the moment staying quiet; her shoes resting on the bench beside her the whole time; her face and design; the shelter, bus-stop sign, birches and red barn in their places; steady, even grey daylight with the same pale exposure from the first frame through the final frame.</pre></details><details class="prompt"><summary>Example prompt: MiniMax H3 API, first frame</summary><pre>Picture 1 aligns with the 0.00-second mark of the target video. One continuous 5-second shot. Subject: 2D hand-drawn lofi anime: thin grainy pencil line, flat pale colour laid in loosely, light sparse shading, soft round blush, lots of open paper white, matte paper grain, even focus across the whole frame; a wide view of a wooden roadside bus shelter on an empty Nordic country road in steady late-afternoon rain, its ceiling lamp glowing warm; the young blonde elf woman with a top bun, in a pale blue jacket with a white collar, a black turtleneck and cream trousers, sits barefoot on the bench, her brown shoes drying on the bench beside her; a bus-stop sign and a board reading &quot;TIMETABLE&quot; stand at the roadside, with birch trees, a fence and a red barn across the flat fields. Action: From start to finish steady rain falls in thin slanting lines, drops ring outward in the puddles on the road, and the shelter lamp glows at one even brightness. From 0 to about 2.5 seconds she swings her bare feet slowly, once or twice, then her feet come to rest. At about 3 seconds she turns her head to look down the road toward the right side of the frame. From 4 to 5 seconds she holds that look while the birch branches sway slightly in the wind. Camera: a static wide shot that holds perfectly still, so each small movement reads clearly against the rain. Preserve: the quiet stillness, with only small, gentle movements; her shoes resting on the bench beside her for the whole clip; her face, hair and clothes; the shelter, sign, birches and barn in their places; the same thin pencil line, flat pale colour and open paper white in every frame, from the first frame to the last. Sound: steady rain drumming on the shelter roof and pattering into the puddles, with a light wind in the birches. The soundtrack is natural sound alone.</pre></details><details class="prompt"><summary>Example prompt: seq adapter, long first-frame generation</summary><pre>Picture 1 aligns with the 0.00-second mark of the target video. Subject: Hand-drawn lofi anime, thin grainy pencil line, flat pale colour; Emmy, blonde elf, top bun, pale blue jacket, sitting barefoot in a wooden bus shelter in rain; animated on twos. Action: Steady rain falls across the empty country road and drops ring in the puddles while the lamp inside the shelter glows steady. Emmy slowly swings her bare feet once or twice, then turns her head to look down the road toward the right of the frame and holds that look. The birch branches sway a little in the wind. Her shoes stay on the bench beside her the whole time. Camera: a static wide shot that holds still. Preserve: the stillness and quiet, the shoes on the bench, the shelter and road, the pencil line and the on-twos rhythm.</pre></details><details class="prompt"><summary>Example prompt: seq adapter, tween between two keys</summary><pre>Picture 1 aligns with the 0.00-second mark of the target video; Picture 2 aligns with the 0.88-second mark. Subject: Hand-drawn lofi anime, thin grainy pencil line, flat pale colour; a door-peephole view of Emmy, rain-wet, parcel under one arm, fist raised high at the right edge of the round lens, on a stairwell landing; animated on twos. Action: Emmy knocks twice on the door beside the peephole, her fist swinging forward to strike the door just past the right edge of the lens and drawing back each time, so her face stays in view, then she lowers her hand toward her chest. Camera: the peephole view stays fixed, with the round lens, its curve and the dark surround holding their size. Preserve: the fisheye curve, the ceiling lamp and stair rail in place, the pencil line and the on-twos rhythm.</pre></details>
+<div class="prose"><h2 id="reference">Reference</h2>
+<h3 id="models">The routes, one by one</h3>
+<p>Each route's card gives its tally over its 12 takes (six shots, two attempts) and its medians over the
+same takes. The study's 84 graded takes cost $46.32 in partner fees in all. The open-weight routes pay no partner fee and run
+on Floyo GPU time instead, and each card gives its route's fee and run time.</p></div>
+<div class="prose"><h4 id="route-h3-api">MiniMax H3 API</h4></div>
+<dl class="stats"><div><dt>Usable as is</dt><dd>5 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>4 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>3 / 4</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 5 · partly 6 · no 1</dd></div><div><dt>Twos score, median</dt><dd>0.55</dd></div><div><dt>Drawings per second, median</dt><dd>15.8</dd></div><div><dt>First-key gap, median</dt><dd>7.7</dd></div><div><dt>Seed spread, median</dt><dd>7.6</dd></div><div><dt>Partner fee per clip</dt><dd>$0.65</dd></div><div><dt>Floyo run time, median</dt><dd>247 s</dd></div><div><dt>Output</dt><dd>124 frames at 24 fps, 2544x1456</dd></div></dl>
+<div class="prose"><p><strong>Out of the box.</strong> A single partner node and the still. MiniMax rewrites the prompt before the model sees it (its prompt expansion), so
+a complete prompt, with every beat timed, matters more than a clever one. It returns the largest frames of the study
+(2544x1456).</p>
+<p><strong>High points</strong></p>
+<ul>
+<li>The bike, usable as is on both attempts, with a strong ending on the second.</li>
+<li>The first attempt on the train.</li>
+</ul>
+<p><strong>Low points</strong></p>
+<ul>
+<li>The platform, where it fell apart.</li>
+<li>The roofs, where it invented an action on both attempts.</li>
+<li>The first peephole attempt, which punched the lens. It is the take Part B repairs.</li>
+<li>Where its cadence slips off twos we would retime it instead of rejecting it,
+  slowing certain frames to put it back on twos.</li>
+</ul></div>
+<div class="prose"><h4 id="route-seedance">Seedance 2.5</h4></div>
+<dl class="stats"><div><dt>Usable as is</dt><dd>7 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>5 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>3 / 2</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 6 · partly 5 · no 1</dd></div><div><dt>Twos score, median</dt><dd>0.39</dd></div><div><dt>Drawings per second, median</dt><dd>18.6</dd></div><div><dt>First-key gap, median</dt><dd>3.7</dd></div><div><dt>Seed spread, median</dt><dd>4.7</dd></div><div><dt>Partner fee per clip</dt><dd>$1.86</dd></div><div><dt>Floyo run time, median</dt><dd>174 s</dd></div><div><dt>Output</dt><dd>121 frames at 24 fps, 1284x716</dd></div></dl>
+<div class="prose"><p><strong>Out of the box.</strong> A single partner node, the most shots with a take usable as is, and the highest partner fee per clip. Every take
+classed by look read as classic 2D.</p>
+<p><strong>High points</strong></p>
+<ul>
+<li>The quiet shots: both bus-shelter attempts were usable as is, and we liked the first one.</li>
+<li>On the train, its two seeds landed far apart to the eye.</li>
+</ul>
+<p><strong>Low points</strong></p>
+<ul>
+<li>Timing on the action shots: the first bike attempt ends abruptly and oddly.</li>
+<li>The platform plays in slow motion.</li>
+<li>Its first peephole knock is less well timed than MiniMax's.</li>
+<li>One roofs attempt grows the blanket.</li>
+</ul></div>
+<div class="prose"><h4 id="route-flux-3">FLUX 3</h4></div>
+<dl class="stats"><div><dt>Usable as is</dt><dd>0 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>0 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>4 / 8</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 2 · partly 6 · no 4</dd></div><div><dt>Twos score, median</dt><dd>0.74</dd></div><div><dt>Drawings per second, median</dt><dd>12.9</dd></div><div><dt>First-key gap, median</dt><dd>3.6</dd></div><div><dt>Seed spread, median</dt><dd>7.0</dd></div><div><dt>Partner fee per clip</dt><dd>$0.85</dd></div><div><dt>Floyo run time, median</dt><dd>106 s</dd></div><div><dt>Output</dt><dd>121 frames at 24 fps, 1280x704</dd></div></dl>
+<div class="prose"><p><strong>Out of the box.</strong> A single partner node, the shortest run time of the study, and no seed, so a good attempt cannot be reproduced.
+Nothing it made was usable as is.</p>
+<p><strong>High points</strong></p>
+<ul>
+<li>A smooth take on the train.</li>
+<li>Acceptable linework on the bike.</li>
+</ul>
+<p><strong>Low points</strong></p>
+<ul>
+<li>Its smoothest take smears.</li>
+<li>The bus shelter veers away from anime into a vector look.</li>
+<li>The second bike roll freezes the rain.</li>
+<li>On the roofs the action does not read at all.</li>
+</ul></div>
+<div class="prose"><h4 id="route-wan-3">Wan 3.0</h4></div>
+<dl class="stats"><div><dt>Usable as is</dt><dd>3 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>2 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>8 / 1</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 7 · partly 5 · no 0</dd></div><div><dt>Twos score, median</dt><dd>0.60</dd></div><div><dt>Drawings per second, median</dt><dd>19.6</dd></div><div><dt>First-key gap, median</dt><dd>3.1</dd></div><div><dt>Seed spread, median</dt><dd>4.1</dd></div><div><dt>Partner fee per clip</dt><dd>$0.50</dd></div><div><dt>Floyo run time, median</dt><dd>117 s</dd></div><div><dt>Output</dt><dd>150 frames at 30 fps, 1280x720</dd></div></dl>
+<div class="prose"><p><strong>Out of the box.</strong> A single partner node, the lowest partner fee, and the only route that renders at 30 fps. A
+workflow has to save at that rate, or the clip plays at the wrong speed. When a take needs work, the usual fix is to regenerate frames.</p>
+<p><strong>High points</strong></p>
+<ul>
+<li>Steady quality: one take rejected, none flagged with a problem, and the highest average lofi-anime mood of the
+  seven routes.</li>
+<li>The bus shelter, usable as is on both attempts, is its best shot.</li>
+</ul>
+<p><strong>Low points</strong></p>
+<ul>
+<li>Narrow range and a repeated flaw (see <a href="#range">Agreement between attempts</a>).</li>
+<li>Wind inside a closed train carriage.</li>
+<li>On the platform, a take that feels flat.</li>
+</ul></div>
+<div class="prose"><h4 id="route-h3-open-weights">H3 open weights</h4></div>
+<dl class="stats"><div><dt>Usable as is</dt><dd>8 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>4 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>1 / 3</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 8 · partly 4 · no 0</dd></div><div><dt>Twos score, median</dt><dd>0.45</dd></div><div><dt>Drawings per second, median</dt><dd>18.5</dd></div><div><dt>First-key gap, median</dt><dd>2.6</dd></div><div><dt>Seed spread, median</dt><dd>6.2</dd></div><div><dt>Partner fee per clip</dt><dd>none (Floyo GPU time)</dd></div><div><dt>Floyo run time, median</dt><dd>380 s</dd></div><div><dt>Output</dt><dd>124 frames at 24 fps, 1344x768</dd></div></dl>
+<div class="prose"><p><strong>Out of the box.</strong> More setup than a partner node, since the model, text encoder and sampler sit in the graph and the prompt is written
+by hand in MiniMax's documented structure. It pays no partner fee and runs longer on Floyo GPUs. It starts closer to the still than any
+other route.</p>
+<p><strong>High points</strong></p>
+<ul>
+<li>The most takes usable as is.</li>
+<li>On the train, the second attempt improves on the first and brings out the light on her face.</li>
+<li>On the bike, a take we liked better than most, with her jacket flapping in the wind.</li>
+<li>On the peephole, the fist landed well on both attempts.</li>
+</ul>
+<p><strong>Low points</strong></p>
+<ul>
+<li>The platform, bad from beginning to end, in style and in story.</li>
+<li>The roofs, where one attempt goes wrong as she lifts the sheet.</li>
+<li>Even a good take on the bus shelter felt a little immature in the quality of its animation.</li>
+</ul></div>
+<div class="prose"><h4 id="route-seq-adapter">seq adapter, 124f</h4></div>
+<dl class="stats"><div><dt>Usable as is</dt><dd>5 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>4 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>4 / 3</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 9 · partly 3 · no 0</dd></div><div><dt>Twos score, median</dt><dd>0.91</dd></div><div><dt>Drawings per second, median</dt><dd>12.4</dd></div><div><dt>First-key gap, median</dt><dd>19.9</dd></div><div><dt>Seed spread, median</dt><dd>10.6</dd></div><div><dt>Partner fee per clip</dt><dd>none (Floyo GPU time)</dd></div><div><dt>Floyo run time, median</dt><dd>1034 s</dd></div><div><dt>Output</dt><dd>124 frames at 24 fps, 1344x768</dd></div></dl>
+<div class="prose"><p><strong>Out of the box.</strong> Our seq adapter on the H3 open weights, run here as a long generation from a first frame: 124 frames
+from one reference, against the model card's 22 frames from two. It is the slowest
+route on Floyo GPUs and pays no partner fee. It redraws its
+reference instead of copying it, so its first frame sits further from the still than any image-to-video route's.</p>
+<p><strong>High points</strong></p>
+<ul>
+<li>The steadiest twos of the study and the highest average in-between grade.</li>
+<li>Every take classed by look read as classic 2D.</li>
+<li>On the platform, the shot that beat every route, it gave the most coherent take.</li>
+<li>On the peephole, a good lean in toward the lens.</li>
+</ul>
+<p><strong>Low points</strong></p>
+<ul>
+<li>The roofs, where the second attempt falls apart at the end.</li>
+<li>The train, where it shares the hair flicker we found on Wan 3.0 and the hero adapter.</li>
+<li>The second peephole attempt, where she points at the peephole.</li>
+</ul></div>
+<div class="prose"><h4 id="route-hero-adapter">hero adapter, 124f</h4></div>
+<dl class="stats"><div><dt>Usable as is</dt><dd>6 of 12 clips</dd></div><div><dt>Shots with an as-is take</dt><dd>4 of 6</dd></div><div><dt>With fixes / not usable</dt><dd>4 / 2</dd></div><div><dt>Reads on twos, by eye</dt><dd>yes 8 · partly 3 · no 1</dd></div><div><dt>Twos score, median</dt><dd>0.64</dd></div><div><dt>Drawings per second, median</dt><dd>15.4</dd></div><div><dt>First-key gap, median</dt><dd>22.8</dd></div><div><dt>Seed spread, median</dt><dd>10.6</dd></div><div><dt>Partner fee per clip</dt><dd>none (Floyo GPU time)</dd></div><div><dt>Floyo run time, median</dt><dd>849 s</dd></div><div><dt>Output</dt><dd>124 frames at 24 fps, 1344x768</dd></div></dl>
+<div class="prose"><p><strong>Out of the box.</strong> Our hero adapter on the same base and settings, with the same caption dialect and one
+reference. It runs here at 124 frames instead of the model card's 22, as a whole shot rather
+than a single next key.</p>
+<p><strong>High points</strong></p>
+<ul>
+<li>The roofs, where the base model struggled and the hero adapter was usable as is on both attempts.
+  The boats drifting behind her are a nice touch, and
+  the take shows why adapters are worth having: it improved on the base model here, with more delicacy than we expected it to handle.</li>
+</ul>
+<p><strong>Low points</strong></p>
+<ul>
+<li>The hero adapter was optimized for black-and-white line art, which may be why its lineweight can come out light on colour work.</li>
+<li>It failed the platform, as the base weights did.</li>
+<li>The train has the same hair flicker as the seq adapter.</li>
+</ul></div>
+<div class="prose"><h3 id="driven">How each route was driven</h3>
+<p>We wrote each prompt from its vendor's guide and checked it against the brief and the stills. What to avoid is written as what should
+happen instead: the brief's request for no added rendering, gloss or depth of field became “matte paper grain, even focus across the whole frame” in the H3 API prompt.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Output</th>
+<th>How it was driven and prompted</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MiniMax H3 API</strong></td>
+<td>124 frames at 24 fps, 2544x1456</td>
+<td>Partner node, first frame only, 2K, prompt expansion “balanced”. MiniMax rewrites the prompt in front of the model, so the prompt states every beat with its time and leaves it nothing to invent: an alignment line, then Subject, Action, Camera, Preserve, and a sound line.</td>
+</tr>
+<tr>
+<td><strong>Seedance 2.5</strong></td>
+<td>121 frames at 24 fps, 1284x716</td>
+<td>Partner node, image only, 720p. ByteDance's whole-second timeline (“0s-1s: …”). The 2D style is named outright, because the model drifts toward live action when it is not, and hair and cloth are asked to move very little.</td>
+</tr>
+<tr>
+<td><strong>FLUX 3</strong></td>
+<td>121 frames at 24 fps, 1280x704</td>
+<td>Partner image-to-video node, 720p, no seed. Timestamped beats; a short Subject line that only pins which way she faces (Black Forest Labs: prompt the motion, not the scene); the drawn look last, as a continuity constraint.</td>
+</tr>
+<tr>
+<td><strong>Wan 3.0</strong></td>
+<td>150 frames at 30 fps, 1280x720</td>
+<td>Partner node, 720P. One timed segment for the whole take, because segment boundaries can turn into cuts; steady exposure asked through the last frame.</td>
+</tr>
+<tr>
+<td><strong>H3 open weights</strong></td>
+<td>124 frames at 24 fps, 1344x768</td>
+<td>Open weights on Floyo GPUs (30 steps). No prompt expansion, so the prompt is written by hand in MiniMax's documented structure for the open weights. The first-frame path stretches its input, so it gets a centre crop of the still at the output aspect.</td>
+</tr>
+<tr>
+<td><strong>seq adapter, 124f</strong></td>
+<td>124 frames at 24 fps, 1344x768</td>
+<td>Our seq adapter, a LoRA on the H3 open weights (reference-to-video, 55 steps), with the still as its one reference. The caption dialect it was trained on: alignment line, Subject, Action, Camera, Preserve.</td>
+</tr>
+<tr>
+<td><strong>hero adapter, 124f</strong></td>
+<td>124 frames at 24 fps, 1344x768</td>
+<td>Our hero adapter on the same base and settings (55 steps), one reference, same caption dialect.</td>
+</tr>
+</tbody>
+</table></div></div>
+<div class="prose"><h3 id="shots">Shot by shot</h3>
+<p>Each grid puts the still and the seven routes in one frame, one grid per attempt. Every tile plays at its model's native frame rate,
+and a clip that ends early holds its last drawing. The grids run at 60 fps, which shows 30 fps evenly and
+24 fps the way any 60 Hz screen does; the speed buttons slow them down. The tables give the grades and the
+twos score per take.</p></div>
+<div class="prose"><h4 id="shot-01">01 Train window · Close-up</h4></div>
+<div class="shot-head"><figure class="img"><img src="media/stills/01_closeup_train.jpg" alt="01 Train window: the still" loading="lazy" decoding="async"><figcaption>The still, the first frame every route was given.</figcaption></figure><div class="brief"><p>Emmy sits by the window of a small local train on a coastal line, mid-morning, bag on her lap, looking out at the sea.</p><p class="label">Camera</p><p>Locked to the carriage. No push, no pan.</p><p class="label">Beats</p><ul><li>0.0-5.0 s: the train is moving. Telegraph poles and their wires sweep past the window, one pole every 1.5 s or so, motion-blurred. The sea glitters and slides by in the distance at a slower rate.</li><li>0.0-5.0 s: a gentle rhythmic sway of the carriage moves Emmy and her bun very slightly.</li><li>about 1.5 s: she blinks once.</li><li>about 3.0 s: her eyes follow one passing pole, then return to the sea.</li><li>4.0-5.0 s: she settles her forehead a little closer to the glass.</li></ul><p class="label">Must hold</p><p>Her face and design, window frame position, calm mood.</p></div></div>
+<figure class="vid"><video id="v3" controls muted playsinline preload="metadata" poster="media/grids/01_closeup_train_attempt1.jpg" aria-label="01 Train window, Attempt 1: seed 42 (FLUX 3 roll 1): the still and seven routes side by side"><source src="media/grids/01_closeup_train_attempt1.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v3" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v3" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v3" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>01 Train window · Attempt 1: seed 42 (FLUX 3 roll 1)</figcaption></figure>
+<figure class="vid"><video id="v4" controls muted playsinline preload="metadata" poster="media/grids/01_closeup_train_attempt2.jpg" aria-label="01 Train window, Attempt 2: seed 1042 (FLUX 3 roll 2): the still and seven routes side by side"><source src="media/grids/01_closeup_train_attempt2.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v4" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v4" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v4" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>01 Train window · Attempt 2: seed 1042 (FLUX 3 roll 2)</figcaption></figure>
+<div class="prose"><div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Attempt</th>
+<th style="text-align: right;">In-between</th>
+<th>On twos (by eye)</th>
+<th style="text-align: right;">Twos score</th>
+<th>Looks like</th>
+<th>Problems</th>
+<th>Usable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.87</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">–</td>
+<td>Partly</td>
+<td style="text-align: right;">0.07</td>
+<td>Digital 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.23</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.18</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.94</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Morphing</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.70</td>
+<td>Digital 2D</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.24</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.95</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">1.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">1.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.90</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.04</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+</tbody>
+</table></div></div>
+<div class="prose"><p><strong>In the grading.</strong> The open weights were usable as is on both attempts. Wind inside a closed carriage is the recurring failure: Wan 3.0 blew her
+hair about, and the seq and hero adapters show the same flicker. One seq take could pass as the train bouncing,
+but on a hero take the window is closed, so the wind has no source.
+By eye, Seedance's two attempts show how far apart two seeds of a commercial model can land.</p></div>
+<div class="prose"><h4 id="shot-02">02 Bus shelter in the rain · Wide, chill</h4></div>
+<div class="shot-head"><figure class="img"><img src="media/stills/02_wide_chill_bus_shelter.jpg" alt="02 Bus shelter in the rain: the still" loading="lazy" decoding="async"><figcaption>The still, the first frame every route was given.</figcaption></figure><div class="brief"><p>A wooden roadside bus shelter on an empty Nordic country road in steady rain, late afternoon. Emmy sits on the bench barefoot, shoes drying beside her.</p><p class="label">Camera</p><p>Static wide. No movement.</p><p class="label">Beats</p><ul><li>0.0-5.0 s: steady rain falls; drops ring in the puddles; the lamp inside the shelter glows steady.</li><li>0.0-2.5 s: Emmy swings her bare feet slowly, once or twice.</li><li>about 3.0 s: she turns her head to look down the road toward screen right.</li><li>4.0-5.0 s: she holds that look. Birch branches move slightly in the wind.</li></ul><p class="label">Must hold</p><p>Stillness. Nothing dramatic happens. Shoes stay on the bench.</p></div></div>
+<figure class="vid"><video id="v5" controls muted playsinline preload="metadata" poster="media/grids/02_wide_chill_bus_shelter_attempt1.jpg" aria-label="02 Bus shelter in the rain, Attempt 1: seed 42 (FLUX 3 roll 1): the still and seven routes side by side"><source src="media/grids/02_wide_chill_bus_shelter_attempt1.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v5" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v5" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v5" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>02 Bus shelter in the rain · Attempt 1: seed 42 (FLUX 3 roll 1)</figcaption></figure>
+<figure class="vid"><video id="v6" controls muted playsinline preload="metadata" poster="media/grids/02_wide_chill_bus_shelter_attempt2.jpg" aria-label="02 Bus shelter in the rain, Attempt 2: seed 1042 (FLUX 3 roll 2): the still and seven routes side by side"><source src="media/grids/02_wide_chill_bus_shelter_attempt2.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v6" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v6" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v6" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>02 Bus shelter in the rain · Attempt 2: seed 1042 (FLUX 3 roll 2)</figcaption></figure>
+<div class="prose"><div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Attempt</th>
+<th style="text-align: right;">In-between</th>
+<th>On twos (by eye)</th>
+<th style="text-align: right;">Twos score</th>
+<th>Looks like</th>
+<th>Problems</th>
+<th>Usable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td>No</td>
+<td style="text-align: right;">0.20</td>
+<td>Vector</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.66</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">1.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td>No</td>
+<td style="text-align: right;">0.20</td>
+<td>Vector</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td>Partly</td>
+<td style="text-align: right;">0.36</td>
+<td>Vector</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.59</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.61</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Yes</td>
+<td style="text-align: right;">0.50</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.39</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.68</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.73</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.65</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.73</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+</tbody>
+</table></div></div>
+<div class="prose"><p><strong>In the grading.</strong> On the quiet shot most routes got it right: every route but FLUX 3 has a take usable as is. Wan 3.0 is the standout for acting,
+and this is the shot where its lack of range first showed. FLUX 3 turned the scene into odd, clunky animation.</p></div>
+<div class="prose"><h4 id="shot-03b">03b Bike in the downpour · Wide, action</h4></div>
+<div class="shot-head"><figure class="img"><img src="media/stills/03b_action_bike_downpour.jpg" alt="03b Bike in the downpour: the still" loading="lazy" decoding="async"><figcaption>The still, the first frame every route was given.</figcaption></figure><div class="brief"><p>Emmy pedals hard along a flat coastal road toward screen right, a black sky and a wall of rain coming in from screen left.</p><p class="label">Camera</p><p>Side-on tracking shot that keeps pace with her, so she stays near the same place in frame while the stone wall and grass stream past right to left.</p><p class="label">Beats</p><ul><li>0.0-5.0 s: she pedals fast, leaning forward; the wheels turn at a believable speed for her pedalling.</li><li>0.0-3.5 s: the dark rain front advances from screen left and gains on her.</li><li>about 3.5 s: the heavy rain overtakes her; the grass whips flat in the gust; spray kicks up from the tyres.</li><li>4.0-5.0 s: she ducks her head lower into the rain and keeps pedalling.</li></ul><p class="label">Must hold</p><p>Direction of travel (screen right), bicycle shape and wheel count, her design under rain.</p></div></div>
+<figure class="vid"><video id="v7" controls muted playsinline preload="metadata" poster="media/grids/03b_action_bike_downpour_attempt1.jpg" aria-label="03b Bike in the downpour, Attempt 1: seed 42 (FLUX 3 roll 1): the still and seven routes side by side"><source src="media/grids/03b_action_bike_downpour_attempt1.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v7" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v7" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v7" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>03b Bike in the downpour · Attempt 1: seed 42 (FLUX 3 roll 1)</figcaption></figure>
+<figure class="vid"><video id="v8" controls muted playsinline preload="metadata" poster="media/grids/03b_action_bike_downpour_attempt2.jpg" aria-label="03b Bike in the downpour, Attempt 2: seed 1042 (FLUX 3 roll 2): the still and seven routes side by side"><source src="media/grids/03b_action_bike_downpour_attempt2.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v8" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v8" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v8" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>03b Bike in the downpour · Attempt 2: seed 1042 (FLUX 3 roll 2)</figcaption></figure>
+<div class="prose"><div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Attempt</th>
+<th style="text-align: right;">In-between</th>
+<th>On twos (by eye)</th>
+<th style="text-align: right;">Twos score</th>
+<th>Looks like</th>
+<th>Problems</th>
+<th>Usable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">1.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.57</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.02</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td>Partly</td>
+<td style="text-align: right;">0.83</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td>No</td>
+<td style="text-align: right;">0.94</td>
+<td>Digital 2D</td>
+<td>AI smear / ghosting; Wrong timing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.28</td>
+<td>–</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.05</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.01</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">1.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">1.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Yes</td>
+<td style="text-align: right;">1.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.50</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+</tbody>
+</table></div></div>
+<div class="prose"><p><strong>In the grading.</strong> The bike asks for tracking and weather, and the H3 API, the open weights and the seq adapter all delivered.
+The seq adapter's first attempt stood out for the trees it added. Seedance's first
+attempt has the abrupt ending behind our note on its timing, and FLUX 3's second roll froze the rain, which left it unusable.</p></div>
+<div class="prose"><h4 id="shot-03e">03e Station platform · Wide, action</h4></div>
+<div class="shot-head"><figure class="img"><img src="media/stills/03e_action_platform.jpg" alt="03e Station platform: the still" loading="lazy" decoding="async"><figcaption>The still, the first frame every route was given.</figcaption></figure><div class="brief"><p>A small-town station platform in late-afternoon light. Emmy is jumping down the last steps of the footbridge stairs with her coat half on. A conductor stands at the open train door on the right, whistle at his lips.</p><p class="label">Camera</p><p>Static wide, or a slight pan right to follow her toward the train. No cut.</p><p class="label">Beats</p><ul><li>0.0-1.0 s: Emmy leaps off the last steps and lands on the platform.</li><li>about 1.0 s: the conductor blows the whistle.</li><li>1.0-4.0 s: she runs toward the train door at screen right, pushing her arm into her coat sleeve as she runs.</li><li>about 3.5 s: the train door starts to slide closed.</li><li>4.0-5.0 s: she reaches the door just as it is closing. Do not resolve whether she makes it.</li></ul><p class="label">Must hold</p><p>Stairs, footbridge and train stay put. One conductor, one Emmy.</p></div></div>
+<figure class="vid"><video id="v9" controls muted playsinline preload="metadata" poster="media/grids/03e_action_platform_attempt1.jpg" aria-label="03e Station platform, Attempt 1: seed 42 (FLUX 3 roll 1): the still and seven routes side by side"><source src="media/grids/03e_action_platform_attempt1.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v9" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v9" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v9" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>03e Station platform · Attempt 1: seed 42 (FLUX 3 roll 1)</figcaption></figure>
+<figure class="vid"><video id="v10" controls muted playsinline preload="metadata" poster="media/grids/03e_action_platform_attempt2.jpg" aria-label="03e Station platform, Attempt 2: seed 1042 (FLUX 3 roll 2): the still and seven routes side by side"><source src="media/grids/03e_action_platform_attempt2.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v10" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v10" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v10" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>03e Station platform · Attempt 2: seed 1042 (FLUX 3 roll 2)</figcaption></figure>
+<div class="prose"><div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Attempt</th>
+<th style="text-align: right;">In-between</th>
+<th>On twos (by eye)</th>
+<th style="text-align: right;">Twos score</th>
+<th>Looks like</th>
+<th>Problems</th>
+<th>Usable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.73</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td>Partly</td>
+<td style="text-align: right;">0.63</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Line boil; Colour flicker; Identity drift</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.55</td>
+<td>Classic 2D</td>
+<td>Wrong timing</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td>No</td>
+<td style="text-align: right;">0.64</td>
+<td>Classic 2D</td>
+<td>Wrong timing</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.08</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Line boil; Identity drift; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td>No</td>
+<td style="text-align: right;">0.00</td>
+<td>Digital 2D</td>
+<td>AI smear / ghosting; Identity drift; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Yes</td>
+<td style="text-align: right;">0.75</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.76</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td>Partly</td>
+<td style="text-align: right;">0.73</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Line boil; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td>Partly</td>
+<td style="text-align: right;">0.75</td>
+<td>–</td>
+<td>AI smear / ghosting; Line boil; Identity drift; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Yes</td>
+<td style="text-align: right;">0.50</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.33</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Identity drift; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td>No</td>
+<td style="text-align: right;">0.70</td>
+<td>–</td>
+<td>AI smear / ghosting; Line boil; Identity drift; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td>Partly</td>
+<td style="text-align: right;">0.39</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Line boil; Identity drift; Morphing</td>
+<td>no</td>
+</tr>
+</tbody>
+</table></div></div>
+<div class="prose"><p><strong>In the grading.</strong> Nothing usable as is came out of the platform, from any route. Seedance played it in slow motion, Wan 3.0 came out flat, and the H3
+routes came apart. The seq adapter's first attempt holds the story together well enough that we would consider fixing it with generative tools, though the fix would take time.</p></div>
+<div class="prose"><h4 id="shot-04">04 Roofs, pulling back · Zoom out</h4></div>
+<div class="shot-head"><figure class="img"><img src="media/stills/04_zoom_out_roofs.jpg" alt="04 Roofs, pulling back: the still" loading="lazy" decoding="async"><figcaption>The still, the first frame every route was given.</figcaption></figure><div class="brief"><p>Steep tiled roofs of a small harbour hill town at first light, laundry strung between houses. Emmy is a small figure on a balcony at right, hanging sheets.</p><p class="label">Camera</p><p>Very slow continuous pull back over the full 5 s, revealing a little more town at every edge. Ease in, no ease out.</p><p class="label">Beats</p><ul><li>0.0-5.0 s: laundry sways in a light breeze; one or two chimneys give off thin smoke; a small boat moves slowly in the harbour.</li><li>0.0-5.0 s: the early sun slowly brightens across the tops of the roofs while the streets stay in blue shadow.</li><li>1.0-3.5 s: Emmy lifts a white sheet and pegs it to the line.</li></ul><p class="label">Must hold</p><p>Emmy stays tiny. Town layout and harbour stay coherent as more is revealed.</p></div></div>
+<figure class="vid"><video id="v11" controls muted playsinline preload="metadata" poster="media/grids/04_zoom_out_roofs_attempt1.jpg" aria-label="04 Roofs, pulling back, Attempt 1: seed 42 (FLUX 3 roll 1): the still and seven routes side by side"><source src="media/grids/04_zoom_out_roofs_attempt1.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v11" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v11" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v11" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>04 Roofs, pulling back · Attempt 1: seed 42 (FLUX 3 roll 1)</figcaption></figure>
+<figure class="vid"><video id="v12" controls muted playsinline preload="metadata" poster="media/grids/04_zoom_out_roofs_attempt2.jpg" aria-label="04 Roofs, pulling back, Attempt 2: seed 1042 (FLUX 3 roll 2): the still and seven routes side by side"><source src="media/grids/04_zoom_out_roofs_attempt2.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v12" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v12" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v12" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>04 Roofs, pulling back · Attempt 2: seed 1042 (FLUX 3 roll 2)</figcaption></figure>
+<div class="prose"><div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Attempt</th>
+<th style="text-align: right;">In-between</th>
+<th>On twos (by eye)</th>
+<th style="text-align: right;">Twos score</th>
+<th>Looks like</th>
+<th>Problems</th>
+<th>Usable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Yes</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.91</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td>No</td>
+<td style="text-align: right;">0.89</td>
+<td>Vector</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.12</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.04</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>–</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.94</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td>Partly</td>
+<td style="text-align: right;">1.00</td>
+<td>Classic 2D</td>
+<td>AI smear / ghosting; Colour flicker; Identity drift; Morphing</td>
+<td>no</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.00</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+</tbody>
+</table></div></div>
+<div class="prose"><p><strong>In the grading.</strong> The slow pull-back over a town with a tiny figure punishes invented action. The H3 routes and FLUX 3 gave her actions that do not read,
+Wan 3.0 had trouble with the sheet on both attempts, and one Seedance take grew the blanket. The hero adapter did less, and did it
+well on both attempts, with more delicacy than we expected from it.</p></div>
+<div class="prose"><h4 id="shot-05b">05b The peephole · Fisheye</h4></div>
+<div class="shot-head"><figure class="img"><img src="media/stills/05b_fisheye_peephole.jpg" alt="05b The peephole: the still" loading="lazy" decoding="async"><figcaption>The still, the first frame every route was given.</figcaption></figure><div class="brief"><p>View through a door peephole from inside a flat. Emmy stands on the stairwell landing, rain-wet, a parcel under one arm, fist raised to knock.</p><p class="label">Camera</p><p>Fixed. This is the peephole, so the circle, the fisheye curve and the dark surround never move or change size.</p><p class="label">Beats</p><ul><li>about 0.8 s and 1.4 s: she knocks twice on the door (her fist moves toward camera and back).</li><li>1.5-3.0 s: she waits, shifts the parcel under her arm, and a drop falls from her hair.</li><li>3.0-4.5 s: she leans in toward the peephole and squints, her face growing larger and bending more in the lens.</li><li>4.5-5.0 s: she holds there, looking straight into the lens.</li></ul><p class="label">Must hold</p><p>Fisheye distortion stays consistent with the still. Ceiling lamp and stair rail stay in place.</p></div></div>
+<figure class="vid"><video id="v13" controls muted playsinline preload="metadata" poster="media/grids/05b_fisheye_peephole_attempt1.jpg" aria-label="05b The peephole, Attempt 1: seed 42 (FLUX 3 roll 1): the still and seven routes side by side"><source src="media/grids/05b_fisheye_peephole_attempt1.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v13" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v13" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v13" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>05b The peephole · Attempt 1: seed 42 (FLUX 3 roll 1)</figcaption></figure>
+<figure class="vid"><video id="v14" controls muted playsinline preload="metadata" poster="media/grids/05b_fisheye_peephole_attempt2.jpg" aria-label="05b The peephole, Attempt 2: seed 1042 (FLUX 3 roll 2): the still and seven routes side by side"><source src="media/grids/05b_fisheye_peephole_attempt2.mp4" type="video/mp4"></video><div class="speed" role="group" aria-label="Playback speed"><span>Speed</span><button type="button" data-for="v14" data-rate="1" aria-pressed="true">1×</button><button type="button" data-for="v14" data-rate="0.5" aria-pressed="false">½×</button><button type="button" data-for="v14" data-rate="0.25" aria-pressed="false">¼×</button></div><figcaption>05b The peephole · Attempt 2: seed 1042 (FLUX 3 roll 2)</figcaption></figure>
+<div class="prose"><div class="tw"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th style="text-align: right;">Attempt</th>
+<th style="text-align: right;">In-between</th>
+<th>On twos (by eye)</th>
+<th style="text-align: right;">Twos score</th>
+<th>Looks like</th>
+<th>Problems</th>
+<th>Usable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Yes</td>
+<td style="text-align: right;">0.59</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>no</td>
+</tr>
+<tr>
+<td>H3 API</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.53</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.78</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>Seedance 2.5</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.63</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.66</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>FLUX 3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.86</td>
+<td>Vector</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.77</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>Wan 3.0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.73</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.60</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>H3 open weights</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.53</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.89</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>seq 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td>Partly</td>
+<td style="text-align: right;">0.82</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.63</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>as is</td>
+</tr>
+<tr>
+<td>hero 124f</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>Yes</td>
+<td style="text-align: right;">0.72</td>
+<td>Classic 2D</td>
+<td>–</td>
+<td>with fixes</td>
+</tr>
+</tbody>
+</table></div></div>
+<div class="prose"><p><strong>In the grading.</strong> The peephole is a contact shot. The first H3 API attempt punches the lens, and
+the second lands the fist in a more acceptable place, with some humour.
+The open weights placed the fist well on both attempts, and the takes are funny.
+Wan 3.0 animated well and put the fist somewhere odd both times. The seq adapter's first attempt
+keeps the rain falling about her and off the peephole.</p></div>
+<div class="prose"><h3 id="method">How we measured</h3>
+<p>All measures run on a grayscale copy of each clip scaled to 320 px wide, and differences are mean absolute grey-level
+differences on a scale where black to white is 255.</p>
+<ul>
+<li><strong>Twos score:</strong> the share of frame-to-frame steps that follow a strict hold, move, hold, move pattern. A frame pair is a hold when it
+  changes far less than its neighbours or not at all. On synthetic test clips, a move held cleanly on twos scores 1.00, on
+  threes 0.65 and on ones 0.00. It reads the whole frame, with the consequences described under
+  <a href="#measures">The measurements describe rhythm</a>.</li>
+<li><strong>Drawings per second:</strong> the frame rate times the share of frame pairs that are not holds.</li>
+<li><strong>First-key gap:</strong> the difference between the clip's first frame and the still it was given, with the still centre-cropped to the
+  clip's aspect. In Part B the <strong>last-key gap</strong> does the same for the last frame and the span's last key. Low means the clip starts (or
+  ends) on the key.</li>
+<li><strong>Seed spread:</strong> the difference between a route's two attempts at 25 matched moments across the clip, averaged. Low means the
+  two attempts look alike.</li>
+<li><strong>Flicker:</strong> the wobble of each frame's mean brightness around its running average. Zero is steady light.</li>
+<li><strong>Key to key:</strong> Part B times each clip from its first frame to its last: (frames - 1) / fps. The source span, the tweens and the
+  prompt's alignment mark all use this convention.</li>
+<li><strong>Cost and run time:</strong> Floyo's record for each run, the partner fee and the run time on Floyo.</li>
+</ul>
+<p>Every grade in this study comes from a single reviewer, which is the study's main limit of scope.</p></div>
+</main>
+<footer>Alvdansen Labs · Minta Carlson, Timothy Bielec · October 2026 · <a href="#workflows">Workflows</a> on Floyo: [Floyo workflow link: to come]</footer>
+</body>
+</html>

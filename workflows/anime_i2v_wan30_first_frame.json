@@ -1,0 +1,74 @@
+{
+ "1": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "#inputs/FIRST_FRAME.png"
+  },
+  "_meta": {
+   "title": "FIRST FRAME: your key drawing (replace FIRST_FRAME.png)"
+  }
+ },
+ "10": {
+  "class_type": "AlibabaWan30ImageToVideo_floyo",
+  "inputs": {
+   "image": [
+    "1",
+    0
+   ],
+   "prompt": "One continuous 5-second take, a single fixed wide shot from start to finish, beginning exactly on the first frame (image 1). Subject: Emmy, the blonde elf with a top bun, gold hoops, a pale blue jacket with a white collar, a black turtleneck and cream trousers, sits barefoot on the bench of a wooden roadside bus shelter on an empty country road in steady late-afternoon rain, her brown shoes drying on the bench beside her. Action, Segment 1 [0-5s]: For the full five seconds steady rain falls in thin pencil streaks, drops ring in the puddles on the road, and the lamp inside the shelter glows with a constant warm light. From 0 to 2.5 seconds Emmy slowly swings her bare feet, once or twice, then lets them rest. At about 3 seconds she turns her head to look down the road toward screen right. From 4 to 5 seconds she holds that look, quiet and patient, while the bare birch branches sway slightly in the wind. Camera: fixed wide shot, locked in place for all five seconds, so the falling rain and her small movements carry the stillness of the wait. Style notes: Maintain the hand-drawn lofi anime style of image 1 throughout: thin grainy pencil line, flat pale colour laid in loosely, only the faintest shading, soft round blush, wide areas of paper white. Every movement carries a hand-drawn pencil feel: each moving element keeps that same pencil line and flat colour, with matte surfaces and the whole picture in even, equal focus. Preserve: stillness, with every movement small and soft and the moment staying quiet; her shoes resting on the bench beside her the whole time; her face and design; the shelter, bus-stop sign, birches and red barn in their places; steady, even grey daylight with the same pale exposure from the first frame through the final frame.",
+   "duration": "5",
+   "resolution": "720P",
+   "ratio": "16:9",
+   "audio": false,
+   "watermark": false,
+   "seed": 42
+  },
+  "_meta": {
+   "title": "Wan 3.0: first frame to 2D animation"
+  }
+ },
+ "90": {
+  "class_type": "VideoToFrames",
+  "inputs": {
+   "video_url": [
+    "10",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "Frames + the model's native frame rate (output 2)"
+  }
+ },
+ "91": {
+  "class_type": "CreateVideo",
+  "inputs": {
+   "images": [
+    "90",
+    0
+   ],
+   "fps": [
+    "90",
+    2
+   ],
+   "bit_depth": 8
+  },
+  "_meta": {
+   "title": "Create video at the model's native frame rate"
+  }
+ },
+ "92": {
+  "class_type": "SaveVideo",
+  "inputs": {
+   "video": [
+    "91",
+    0
+   ],
+   "filename_prefix": "video/anime_i2v_wan30_first_frame",
+   "format": "auto",
+   "codec": "auto"
+  },
+  "_meta": {
+   "title": "Save video"
+  }
+ }
+}
