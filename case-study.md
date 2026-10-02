@@ -24,8 +24,7 @@ seven routes are:
 - MiniMax H3, run from its open weights
 - Two adapters we trained on top of those weights, the seq adapter and the hero adapter
 
-Each route animated each first frame twice, into a 5-second shot. Our Creative
-Lead, Minta Carlson, graded every take by eye, and we measured every take frame by frame. Then we set out to repair one take that
+Each route animated each first frame twice, into a 5-second shot. We graded every take by eye and measured every take frame by frame. Then we set out to repair one take that
 went wrong. Its knock was meant for the door and hits the peephole lens. We regenerated that second with our seq adapter as a tween to cut back into the take.
 
 ## What we found
