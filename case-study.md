@@ -4,7 +4,7 @@
 
 **Alvdansen Labs** · Minta Carlson, Timothy Bielec · October 2026
 
-This study is about generating anime one full shot at a time. Each shot begins from one generated frame, a finished image with no separate layers or line art. A video model renders the whole scene from it: character, background and motion together. What we set out to find is
+This study is about generating anime one full shot at a time. Each shot begins from one generated frame, with no layers and no line art. A video model renders the whole scene from it: character, background and motion together. What we set out to find is
 which models move convincingly in this style with little direct work from an artist on
 the in-betweens, the drawings that carry a movement from one pose to the next. Anime usually holds each of those drawings for two
 frames, a rhythm called twos, which gives twelve drawings to every second of screen. Keeping that cadence, and keeping the motion
@@ -26,7 +26,7 @@ seven routes are:
 
 Each route animated each first frame twice, into a 5-second shot. Our Creative
 Lead, Minta Carlson, graded every take by eye, and we measured every take frame by frame. Then we set out to repair one take that
-went wrong. Its knock hits the peephole lens where it should hit the door. We regenerated that second with our seq adapter as a tween to cut back into the take.
+went wrong. Its knock was meant for the door and hits the peephole lens. We regenerated that second with our seq adapter as a tween to cut back into the take.
 
 ## What we found
 
@@ -36,7 +36,7 @@ Five findings came out of the study, the first four from the comparison and the 
    motion: timing, contact, and movement the shot gives no reason for.
 2. **[Each route fails differently, and the kind of failure decides the fix.](#2-each-route-fails-differently)** The four routes we found smoothest do not
    line up from best to worst. Each tends toward a different kind of failure, and each kind has a different repair.
-3. **[Two attempts that agree may show the model's bias.](#3-agreement-between-attempts-can-be-the-models-bias)** Wan 3.0 varied least between attempts and
+3. **[Two attempts that agree may show the model's bias. Agreement alone does not show control.](#3-agreement-between-attempts-can-be-the-models-bias)** Wan 3.0 varied least between attempts and
    tended to repeat its flaws. A second attempt buys little there, and a frame-level fix buys a lot.
 4. **[The measurements describe rhythm; the eye judges the take.](#4-the-measurements-describe-rhythm-the-eye-judges-the-take)** Our cadence score did not predict which takes we would
    use. It is a good check on rhythm and on a cleanup, and it cannot judge whether a take works.
@@ -121,15 +121,15 @@ Read together, the grading comments add up to a checklist for reviewing generate
 2. **Holding on twos.** Anime is limited animation, with fewer drawings held for longer, and the holds are what make its motion feel
    intended. Without them everything moves at one speed and the motion loses its sense of intent, as in a FLUX 3 take of the peephole.
 3. **Line and look.** Classic 2D, the hand-drawn look of the stills, against digital 2D and vector. Vector here means the eased or
-   constant-speed interpolation of motion graphics, in which shapes slide across the frame and are never redrawn.
+   constant-speed interpolation of motion graphics, in which shapes slide and are not redrawn.
    One FLUX 3 take of the bus shelter came out as clunky vector, and
    one hero take was light in lineweight.
 4. **AI smears and ghosting.** Frames that cross-dissolve two drawings into one. A drawn smear frame is different, because an animator
-   places it on purpose to sell speed. A smooth FLUX 3 take on the train has smeared frames that a trained eye will catch.
+   places it on purpose to sell speed. A smooth FLUX 3 take on the train has smeared frames that are easy to spot.
 5. **Morphing and drift.** Shapes that swell, a character who stops being herself, line that boils from frame to frame, colour that
    flickers. On the roofs, one Seedance take lets the blanket grow far bigger.
 6. **Motion the shot gives no reason for.** Wan 3.0 blew Emmy's hair about inside a closed [train](#01-train-window--close-up) carriage,
-   invented motion with no cause in the scene.
+   invented motion that an animator would leave out.
    On the [roofs](#04-roofs-pulling-back--zoom-out), the MiniMax H3 API had her go through the motions of folding without folding anything.
 7. **Timing.** Slow motion, rushed beats, endings that stop short of a settle. Seedance played the station platform in slow motion.
 8. **Contacts.** Where a hand, a foot or a fist lands. The peephole knock was meant for the door.
@@ -139,7 +139,7 @@ Read together, the grading comments add up to a checklist for reviewing generate
 9. **Range.** How different two attempts are, which decides whether a second attempt is worth paying for. The section on
    [range](#3-agreement-between-attempts-can-be-the-models-bias) takes it up.
 
-Most of these happen across frames and cannot be seen in any single one. That is how a take whose every frame passes can still fail. The problems flagged
+Most of these happen across frames. A single frame does not show them. That is how a take whose every frame passes can still fail. The problems flagged
 on the sheet show the same thing from the other side, because they cover only part of what went wrong. Nearly half of the rejected
 takes carry no flag at all. They fail on things only the comments record:
 
@@ -163,7 +163,7 @@ takes carry no flag at all. They fail on things only the comments record:
 | Flagged: wrong timing | 3 |
 | Flagged: colour flicker | 2 |
 
-Restraint also earned good grades. On the slow pull-back over the roofs, most routes gave Emmy an action that does not read. The
+A quiet take can grade as well as an inventive one. On the slow pull-back over the roofs, most routes gave Emmy an action that does not read. The
 hero adapter had her do very little, and we graded both of its attempts usable as is,
 because an action that makes no sense distracts more than a quiet one.
 
@@ -191,7 +191,7 @@ one of its takes and flagged no problem on any of them. Its weakness is that it 
 which the section on [agreement between attempts](#3-agreement-between-attempts-can-be-the-models-bias) takes up. For most of its takes, the fix the grading named was to regenerate
 frames.
 
-The H3 open weights gave more takes usable as is than any other route and started closest to the still. When they fail, they fail across the whole take. On the platform too many of their frames are bad, and
+The H3 open weights gave more takes usable as is than any other route and started closest to the still. When they fail, the take is lost outright. On the platform too many of their frames are bad, and
 on the roofs one attempt goes wrong as she lifts the sheet.
 
 The MiniMax H3 API tends to invent. It gave Emmy something to do on the roofs that she is not doing, on both attempts, and its first peephole
@@ -201,7 +201,7 @@ Its cadence also slips off twos in places, and there an edit that retimes the fr
 FLUX 3 sits outside the four for a plain reason: it gave no take usable as is, and its takes slid into vector and smeared their
 in-betweens more often than any other route's. Seedance 2.5 sits outside for a subtler one, and it makes the clearest contrast
 with the seq adapter. Seedance gave a take usable as is on more shots than any other route and still missed our four, because most of
-its misses were timing misses. We saw this pattern in the strongest commercial models, which pair high fidelity with erratic timing.
+its misses were timing misses. We saw this pattern in the strongest commercial models. They pair high fidelity with timing that can be very strange.
 
 The seq adapter is the opposite case. It held twos most steadily of all seven routes and earned the highest in-between grades. It
 also added life the brief did not ask for: on the [bike](#03b-bike-in-the-downpour--wide-action)
@@ -245,7 +245,7 @@ of the clip. It is lowest for Wan 3.0 and highest for the two adapters, whose at
 A wide route makes the second attempt worth paying for. On the [platform](#03e-station-platform--wide-action) the seq adapter gave both the best take of the shot and a
 rejected one. One seed told the most coherent story of any take there; the other
 was not usable. Commercial models can show range too. On the train,
-Seedance's two attempts differed widely with no adapter involved,
+Seedance's two attempts showed real range with no adapter involved,
 although our measure scores that pair as the closest of the shot. We come back to that disagreement under [measurement](#4-the-measurements-describe-rhythm-the-eye-judges-the-take).
 
 For a studio the consequence is practical. A second attempt from a narrow model returns the same answer with the same mistake, so the fix
@@ -309,7 +309,7 @@ Each of those is a repair. A repair asks different things of a model than a full
 #### The take
 
 On the peephole shot, Emmy is meant to knock on the door. In the MiniMax H3 API's first attempt (seed 42) her fist goes
-straight into the lens and fills the view. The take is charming. The punch on the peephole is plainly unintended, a contact error common in generated animation.
+straight into the lens and fills the view. The take is charming. The punch on the peephole is plainly unintended, the kind of contact error that marks careless AI generation.
 We chose this take for the test: keep it, regenerate the knock between two of its frames, and have the fist strike the door beside the
 peephole.
 
@@ -468,7 +468,7 @@ So we still see a finetuning path as a good place to start for a studio that wan
 
 - fidelity and style matching to its house style
 - lower generation cost, since a run on open weights pays for GPU time and no partner fee per clip
-- flexibility, with attempts that differ widely from seed to seed
+- flexibility, with real range between attempts
 
 Each of the final four points to a different follow-up:
 
@@ -488,7 +488,7 @@ seq adapter gets two; its LoRA can be switched off to run the H3 open weights. E
 the takes in this study, with the study's prompt left in as an editable example. `FIRST_FRAME.png` (and `LAST_FRAME.png` for the tween)
 is where your key drawings go.
 
-The Wan 3.0 and MiniMax H3 API workflows use Floyo partner nodes (`AlibabaWan30ImageToVideo_floyo`, `MiniMaxH3FirstLastFrameToVideo_floyo`) and run on Floyo. The two seq adapter workflows use the core ComfyUI MiniMax H3 nodes.
+The Wan 3.0 and MiniMax H3 API workflows use Floyo partner nodes (`AlibabaWan30ImageToVideo_floyo`, `MiniMaxH3FirstLastFrameToVideo_floyo`) and run on Floyo. The two seq adapter workflows use ComfyUI's MiniMax H3 nodes.
 
 | Workflow | File | Input | Length | On Floyo |
 | --- | --- | --- | --- | --- |
@@ -502,7 +502,7 @@ The Wan 3.0 and MiniMax H3 API workflows use Floyo partner nodes (`AlibabaWan30I
 1. Request access at [alvdansen/h3-keyframe-animation](https://huggingface.co/alvdansen/h3-keyframe-animation) on Hugging Face.
 2. Take `h3_seq_step12000` from the repository's `adapters` folder. It is already converted for H3.
 3. Put it in your ComfyUI `models/loras` folder and select it in that node.
-4. The model card gives the license, the inference settings and the conditioning contract. The adapters run on the full H3 model under MiniMax's H3 license. H3 Turbo is a separate model, outside what they were trained for.
+4. The model card gives the license, the inference settings and the conditioning contract. The adapters run on the full H3 model under MiniMax's H3 license. They do not run on H3 Turbo.
 
 Notes on the workflows:
 
@@ -713,7 +713,7 @@ other route.
 
 **Out of the box.** Our seq adapter on the H3 open weights, run here as a long generation from a first frame: 124 frames
 from one reference, against the model card's 22 frames from two. It is the slowest
-route on Floyo GPUs and pays no partner fee. It redraws its reference, so its first frame sits further from the still than any image-to-video route's.
+route on Floyo GPUs and pays no partner fee. It redraws its reference. Its first frame sits further from the still than any image-to-video route's.
 
 **High points**
 
@@ -749,7 +749,7 @@ reference. It runs here as a whole shot of 124 frames. The model card's setting 
 
 - The roofs, where the base model struggled and the hero adapter was usable as is on both attempts.
   The boats drifting behind her are a nice touch, and
-  the take shows why adapters are worth having: it improved on the base model here and handled the delicate action better than we expected.
+  the take shows why adapters are worth having: it improved on the base model here. It moved more delicately than we expected.
 
 **Low points**
 
@@ -765,7 +765,7 @@ We wrote each prompt from its vendor's guide and checked it against the brief an
 | --- | --- | --- |
 | **MiniMax H3 API** | 124 frames at 24 fps, 2544x1456 | Partner node, first frame only, 2K, prompt expansion “balanced”. MiniMax rewrites the prompt in front of the model, so the prompt states every beat with its time and leaves it nothing to invent: an alignment line, then Subject, Action, Camera, Preserve, and a sound line. |
 | **Seedance 2.5** | 121 frames at 24 fps, 1284x716 | Partner node, image only, 720p. ByteDance's whole-second timeline (“0s-1s: …”). The 2D style is named outright, because the model drifts toward live action when it is not, and hair and cloth are asked to move very little. |
-| **FLUX 3** | 121 frames at 24 fps, 1280x704 | Partner image-to-video node, 720p, no seed. Timestamped beats; a short Subject line that only pins which way she faces (Black Forest Labs' guide: prompt the motion and let the image carry the scene); the drawn look last, as a continuity constraint. |
+| **FLUX 3** | 121 frames at 24 fps, 1280x704 | Partner image-to-video node, 720p, no seed. Timestamped beats; a short Subject line that only pins which way she faces (Black Forest Labs' guide: prompt the motion and leave the scene out of the prompt); the drawn look last, as a continuity constraint. |
 | **Wan 3.0** | 150 frames at 30 fps, 1280x720 | Partner node, 720P. One timed segment for the whole take, because segment boundaries can turn into cuts; steady exposure asked through the last frame. |
 | **H3 open weights** | 124 frames at 24 fps, 1344x768 | Open weights on Floyo GPUs (30 steps). No prompt expansion, so the prompt is written by hand in MiniMax's documented structure for the open weights. The first-frame path stretches its input, so it gets a centre crop of the still at the output aspect. |
 | **Seq adapter, 124 frames** | 124 frames at 24 fps, 1344x768 | Our seq adapter, a LoRA on the H3 open weights (reference-to-video, 55 steps), with the still as its one reference. The caption dialect it was trained on: alignment line, Subject, Action, Camera, Preserve. |

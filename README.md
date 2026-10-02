@@ -12,7 +12,7 @@ A case study from Alvdansen Labs by Minta Carlson and Timothy Bielec · October 
 
 *Anime can now be generated a whole shot at a time, scene and motion together, from a single first frame. We compared seven video routes on six shots to find the ones that move convincingly with little work from an artist on the in-betweens, then regenerated one second of a failed take with our seq adapter.*
 
-This study is about generating anime one full shot at a time. Each shot begins from one generated frame, a finished image with no separate layers or line art. A video model renders the whole scene from it: character, background and motion together. What we set out to find is which models move convincingly in this style with little direct work from an artist on the in-betweens, the drawings that carry a movement from one pose to the next. Anime usually holds each of those drawings for two frames, a rhythm called twos, which gives twelve drawings to every second of screen. Keeping that cadence, and keeping the motion believable, is what we judged every take on.
+This study is about generating anime one full shot at a time. Each shot begins from one generated frame, with no layers and no line art. A video model renders the whole scene from it: character, background and motion together. What we set out to find is which models move convincingly in this style with little direct work from an artist on the in-betweens, the drawings that carry a movement from one pose to the next. Anime usually holds each of those drawings for two frames, a rhythm called twos, which gives twelve drawings to every second of screen. Keeping that cadence, and keeping the motion believable, is what we judged every take on.
 
 Some teams want methods built deliberately into a multi-stage animation pipeline, where an artist draws the keys and adapters trained on hand-drawn animation fill in the drawings around them. Our paper [Animating on Twos](https://alvdansen.github.io/animating-on-twos/) covers that approach. This case study is written for AI-native teams. It stays with shots generated whole, on tools a studio can open today, and asks how well each route keeps the cadence and the believability of the motion.
 
@@ -22,7 +22,7 @@ We gave seven routes the same character and the same six first frames, which we 
 - MiniMax H3, run from its open weights
 - Two adapters we trained on top of those weights, the seq adapter and the hero adapter
 
-Each route animated each first frame twice, into a 5-second shot. Our Creative Lead, Minta Carlson, graded every take by eye, and we measured every take frame by frame. Then we set out to repair one take that went wrong. Its knock hits the peephole lens where it should hit the door. We regenerated that second with our seq adapter as a tween to cut back into the take.
+Each route animated each first frame twice, into a 5-second shot. Our Creative Lead, Minta Carlson, graded every take by eye, and we measured every take frame by frame. Then we set out to repair one take that went wrong. Its knock was meant for the door and hits the peephole lens. We regenerated that second with our seq adapter as a tween to cut back into the take.
 
 ---
 
