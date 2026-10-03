@@ -491,10 +491,10 @@ The Wan 3.0 and MiniMax H3 API workflows use Floyo partner nodes (`AlibabaWan30I
 
 | Workflow | File | Input | Length | On Floyo |
 | --- | --- | --- | --- | --- |
-| Wan 3.0, first frame | [`anime_i2v_wan30_first_frame.json`](workflows/anime_i2v_wan30_first_frame.json) | First frame | 5 s at the model's native rate (30 fps) | [Floyo workflow link: to come] |
-| MiniMax H3 API, first frame | [`anime_i2v_minimax_h3_api_first_frame.json`](workflows/anime_i2v_minimax_h3_api_first_frame.json) | First frame | 5 s at the model's native rate (24 fps) | [Floyo workflow link: to come] |
-| Seq adapter, long first-frame generation | [`anime_seq_adapter_first_frame_124f.json`](workflows/anime_seq_adapter_first_frame_124f.json) | First frame (one reference) | 124 frames at 24 fps | [Floyo workflow link: to come] |
-| Seq adapter, tween between two keys | [`anime_seq_adapter_tween_first_last_22f.json`](workflows/anime_seq_adapter_tween_first_last_22f.json) | First and last frame (two references) | 22 frames at 24 fps | [Floyo workflow link: to come] |
+| Wan 3.0, first frame | [`anime_i2v_wan30_first_frame.json`](workflows/anime_i2v_wan30_first_frame.json) | First frame | 5 s at the model's native rate (30 fps) | [Open on Floyo](https://www.floyo.ai/workflows/anime-shot-from-a-first-frame-wan-3--rflqrfij2gbb) |
+| MiniMax H3 API, first frame | [`anime_i2v_minimax_h3_api_first_frame.json`](workflows/anime_i2v_minimax_h3_api_first_frame.json) | First frame | 5 s at the model's native rate (24 fps) | [Open on Floyo](https://www.floyo.ai/workflows/anime-shot-from-a-first-frame-minima-j10wic4wnn3o) |
+| Seq adapter, long first-frame generation | [`anime_seq_adapter_first_frame_124f.json`](workflows/anime_seq_adapter_first_frame_124f.json) | First frame (one reference) | 124 frames at 24 fps | [Open on Floyo](https://www.floyo.ai/workflows/full-anime-shot-h3-seq-interpolation-pseuck75flom) |
+| Seq adapter, tween between two keys | [`anime_seq_adapter_tween_first_last_22f.json`](workflows/anime_seq_adapter_tween_first_last_22f.json) | First and last frame (two references) | 22 frames at 24 fps | [Open on Floyo](https://www.floyo.ai/workflows/anime-tween-between-two-keys-h3-seq--p1ffqm055q4q) |
 
 **Setting up the seq adapter.** Both seq workflows load our seq adapter in their LoRA node (LoraLoaderModelOnly). To set it up:
 

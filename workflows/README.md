@@ -24,4 +24,9 @@ The Wan 3.0 and MiniMax H3 API workflows use Floyo partner nodes (`AlibabaWan30I
 
 **H3 open weights.** Open either seq workflow and set the LoRA strength to 0, or bypass the LoRA node. That runs the open weights on the reference-to-video path. The H3 open-weights clips in the case study came from MiniMax's image-to-video graph, so results with the LoRA off can differ from them.
 
-[Floyo workflow link: to come]
+On Floyo:
+
+- [Wan 3.0, first frame](https://www.floyo.ai/workflows/anime-shot-from-a-first-frame-wan-3--rflqrfij2gbb)
+- [MiniMax H3 API, first frame](https://www.floyo.ai/workflows/anime-shot-from-a-first-frame-minima-j10wic4wnn3o)
+- [Seq adapter, long first-frame generation](https://www.floyo.ai/workflows/full-anime-shot-h3-seq-interpolation-pseuck75flom)
+- [Seq adapter, tween between two keys](https://www.floyo.ai/workflows/anime-tween-between-two-keys-h3-seq--p1ffqm055q4q)
